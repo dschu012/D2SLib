@@ -21,7 +21,7 @@ character.ClassSkills.Skills.ForEach(skill => skill.Points = 20);
 character.PlayerItemList.Items[0].StatLists[0].Stats.Add(new ItemStat { Stat = "item_aura", Param = 123, Value = 31 });
 
 //write save
-File.WriteAllBytes(Environment.ExpandEnvironmentVariables($"%userprofile%/Saved Games/Diablo II Resurrected Tech Alpha/{character.Name}.d2s"), ret);
+File.WriteAllBytes(Environment.ExpandEnvironmentVariables($"%userprofile%/Saved Games/Diablo II Resurrected Tech Alpha/{character.Name}.d2s"), Core.WriteD2S(character));
 
 ```
 
