@@ -1,5 +1,6 @@
 using D2SLib;
 using D2SLib.Model.Save;
+using D2SLib.Model.TXT;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
@@ -22,7 +23,6 @@ namespace D2SLibTests
         public void VerifyCanReadComplex115Save()
         {
             D2S character = Core.ReadD2S(File.ReadAllBytes(@"Resources\D2S\1.15\DannyIsGreat.d2s"));
-            character.ClassSkills.Skills.ForEach(skill => skill.Points = 20);
             Assert.IsTrue(character.Name == "DannyIsGreat");
             Assert.IsTrue(character.ClassId == 0x1);
             /*
@@ -44,5 +44,6 @@ namespace D2SLibTests
             //File.WriteAllBytes(Environment.ExpandEnvironmentVariables($"%userprofile%/Saved Games/Diablo II Resurrected Tech Alpha/{character.Name}.d2s"), ret);
             Assert.IsTrue(input.Length == ret.Length);
         }
+
     }
 }

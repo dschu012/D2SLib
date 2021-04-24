@@ -238,7 +238,7 @@ namespace D2SLib.Model.Save
                 {
                     for(int i = 0; i < 4; i++)
                     {
-                        item.Code += ResourceFilesTXT.Instance.TXT.ItemsTXT.ItemCodeTree.DecodeChar(reader);
+                        item.Code += Core.TXT.ItemsTXT.ItemCodeTree.DecodeChar(reader);
                     }
                 }
                 item.NumberOfSocketedItems = reader.ReadByte(item.IsCompact ? 1 : 3);
@@ -295,7 +295,7 @@ namespace D2SLib.Model.Save
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        BitArray bits = ResourceFilesTXT.Instance.TXT.ItemsTXT.ItemCodeTree.EncodeChar((char)code[i]);
+                        BitArray bits = Core.TXT.ItemsTXT.ItemCodeTree.EncodeChar((char)code[i]);
                         foreach (var bit in bits.Cast<bool>())
                         {
                             writer.WriteBit(bit);
@@ -374,10 +374,10 @@ namespace D2SLib.Model.Save
             {
                 reader.ReadBits(96);
             }
-            ItemStatCostTXT itemStatCostTXT = ResourceFilesTXT.Instance.TXT.ItemStatCost;
-            TXTRow row = ResourceFilesTXT.Instance.TXT.ItemsTXT.GetByCode(item.Code);
-            bool isArmor = ResourceFilesTXT.Instance.TXT.ItemsTXT.IsArmor(item.Code);
-            bool isWeapon = ResourceFilesTXT.Instance.TXT.ItemsTXT.IsWeapon(item.Code);
+            ItemStatCostTXT itemStatCostTXT = Core.TXT.ItemStatCostTXT;
+            TXTRow row = Core.TXT.ItemsTXT.GetByCode(item.Code);
+            bool isArmor = Core.TXT.ItemsTXT.IsArmor(item.Code);
+            bool isWeapon = Core.TXT.ItemsTXT.IsWeapon(item.Code);
             bool isStackable = row["stackable"].ToBool();
             if (isArmor)
             {
@@ -492,10 +492,10 @@ namespace D2SLib.Model.Save
             {
                 //todo 96 bits
             }
-            ItemStatCostTXT itemStatCostTXT = ResourceFilesTXT.Instance.TXT.ItemStatCost;
-            TXTRow row = ResourceFilesTXT.Instance.TXT.ItemsTXT.GetByCode(item.Code);
-            bool isArmor = ResourceFilesTXT.Instance.TXT.ItemsTXT.IsArmor(item.Code);
-            bool isWeapon = ResourceFilesTXT.Instance.TXT.ItemsTXT.IsWeapon(item.Code);
+            ItemStatCostTXT itemStatCostTXT = Core.TXT.ItemStatCostTXT;
+            TXTRow row = Core.TXT.ItemsTXT.GetByCode(item.Code);
+            bool isArmor = Core.TXT.ItemsTXT.IsArmor(item.Code);
+            bool isWeapon = Core.TXT.ItemsTXT.IsWeapon(item.Code);
             bool isStackable = row["stackable"].ToBool();
             if (isArmor)
             {
@@ -614,7 +614,7 @@ namespace D2SLib.Model.Save
         public static ItemStat Read(BitReader reader, UInt16 id)
         {
             ItemStat itemStat = new ItemStat();
-            TXTRow property = ResourceFilesTXT.Instance.TXT.ItemStatCost[id];
+            TXTRow property = Core.TXT.ItemStatCostTXT[id];
             if (property == null)
             {
                 throw new Exception($"No ItemStatCost record found for id: {id} at bit {reader.Position - 9}");
@@ -728,11 +728,11 @@ namespace D2SLib.Model.Save
         {
             if (stat.Id != null)
             {
-                return ResourceFilesTXT.Instance.TXT.ItemStatCost[(UInt16)stat.Id];
+                return Core.TXT.ItemStatCostTXT[(UInt16)stat.Id];
             }
             else
             {
-                return ResourceFilesTXT.Instance.TXT.ItemStatCost[(string)stat.Stat];
+                return Core.TXT.ItemStatCostTXT[(string)stat.Stat];
             }
         }
 

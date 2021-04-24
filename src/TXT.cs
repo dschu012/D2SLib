@@ -7,7 +7,22 @@ namespace D2SLib
 {
     public class TXT
     {
-        public ItemStatCostTXT ItemStatCost { get; set; }
-        public ItemsTXT ItemsTXT { get; set; }
+        public ItemStatCostTXT ItemStatCostTXT { get; set; }
+        private ItemsTXT _ItemsTXT = null;
+        public ItemsTXT ItemsTXT
+        {
+            get
+            {
+                if(_ItemsTXT == null)
+                {
+                    _ItemsTXT = new ItemsTXT();
+                }
+                return _ItemsTXT;
+            }
+            set
+            {
+                _ItemsTXT = value;
+            }
+        }
     }
 }

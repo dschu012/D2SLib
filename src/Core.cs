@@ -6,6 +6,19 @@ namespace D2SLib
 {
     public class Core
     {
+        private static TXT _TXT = null;
+        public static TXT TXT
+        {
+            get
+            {
+                return _TXT ?? ResourceFilesTXT.Instance.TXT;
+            }
+            set
+            {
+                _TXT = value;
+            }
+        }
+
         public static D2S ReadD2S(string path)
         {
             return D2S.Read(File.ReadAllBytes(path));

@@ -19,9 +19,8 @@ namespace D2SLib
             ResourceFilesTXT resourceFilesTXT = new ResourceFilesTXT();
             resourceFilesTXT.TXT = new TXT();
             using(Stream s = GetResource("ItemStatCost.txt")) {
-                resourceFilesTXT.TXT.ItemStatCost = ItemStatCostTXT.Read(s);
+                resourceFilesTXT.TXT.ItemStatCostTXT = ItemStatCostTXT.Read(s);
             }
-            resourceFilesTXT.TXT.ItemsTXT = new ItemsTXT();
             using (Stream s = GetResource("Armor.txt"))
             {
                 resourceFilesTXT.TXT.ItemsTXT.ArmorTXT = ArmorTXT.Read(s);
@@ -34,8 +33,6 @@ namespace D2SLib
             {
                 resourceFilesTXT.TXT.ItemsTXT.MiscTXT = MiscTXT.Read(s);
             }
-            resourceFilesTXT.TXT.ItemsTXT.InitializeHuffmanTree();
-
             return resourceFilesTXT;
         }
 

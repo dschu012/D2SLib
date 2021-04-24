@@ -8,6 +8,9 @@
     <PackageTags>d2s d2i diablo-ii diablo2 d2r</PackageTags>
     <Description>Read and write saves from Diablo 2. Supports versions 1.10 through Diablo II: Resurrected (1.15). Supports both d2s (player saves) and d2i (shared stash).</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/dschu012/D2SLib</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

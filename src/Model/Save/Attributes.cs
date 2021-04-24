@@ -14,7 +14,7 @@ namespace D2SLib.Model.Save
 
         public static Attributes Read(BitReader reader)
         {
-            ItemStatCostTXT itemStatCost = ResourceFilesTXT.Instance.TXT.ItemStatCost;
+            ItemStatCostTXT itemStatCost = Core.TXT.ItemStatCostTXT;
             Attributes attributes = new Attributes();
             attributes.Header = reader.ReadUInt16();
             UInt16 id = reader.ReadUInt16(9);
@@ -37,7 +37,7 @@ namespace D2SLib.Model.Save
         {
             using (BitWriter writer = new BitWriter())
             {
-                ItemStatCostTXT itemStatCost = ResourceFilesTXT.Instance.TXT.ItemStatCost;
+                ItemStatCostTXT itemStatCost = Core.TXT.ItemStatCostTXT;
                 writer.WriteUInt16(attributes.Header ?? (UInt16)0x6667);
                 foreach (var entry in attributes.Stats)
                 {

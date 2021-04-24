@@ -14,7 +14,23 @@ namespace D2SLib.Model.TXT
         public ArmorTXT ArmorTXT {get; set;}
         public WeaponsTXT WeaponsTXT { get; set; }
         public MiscTXT MiscTXT { get; set; }
-        public HuffmanTree ItemCodeTree { get; set; }
+
+        private HuffmanTree _ItemCodeTree = null;
+        public HuffmanTree ItemCodeTree
+        {
+            get
+            {
+                if(_ItemCodeTree == null)
+                {
+                    _ItemCodeTree = InitializeHuffmanTree();
+                }
+                return _ItemCodeTree;
+            }
+            set
+            {
+                _ItemCodeTree = value;
+            }
+        }
 
         public TXTRow this[string i] => this.GetByCode(i);
 
@@ -40,7 +56,7 @@ namespace D2SLib.Model.TXT
             return MiscTXT[code] != null;
         }
 
-        public void InitializeHuffmanTree()
+        private HuffmanTree InitializeHuffmanTree()
         {
             /*
             List<string> items = new List<string>();
@@ -57,8 +73,9 @@ namespace D2SLib.Model.TXT
                 items.Add(row["code"]);
             }
             */
-            ItemCodeTree = new HuffmanTree();
-            ItemCodeTree.Build(new List<string>());
+            var itemCodeTree = new HuffmanTree();
+            itemCodeTree.Build(new List<string>());
+            return itemCodeTree;
         }
 
     }
