@@ -2,17 +2,23 @@
 
 Simple C# library for reading and writing Diablo 2 saves. Supports version 1.10 through Diablo II: Resurrected (1.15). Supports reading both d2s (player saves) and d2i (shared stash) files.
 
-Example:
+
+### Usage
+Use [Nuget](https://www.nuget.org/packages/D2SLib/) to add D2SLib to your project.
+
 ```
 using D2SLib;
 using D2SLib.Model.Save;
 
 ....
-
+//read a save
 D2S character = Core.ReadD2S(File.ReadAllBytes(@"Resources\D2S\1.15\DannyIsGreat.d2s"));
 
 //outputs: DannyIsGreat
 Console.WriteLine(character.Name);
+
+//convert 1.10-1.114d save to d2r 1.15
+character.Header.Version = 0x61;
 
  //set all skills to have 20 points
 character.ClassSkills.Skills.ForEach(skill => skill.Points = 20);
