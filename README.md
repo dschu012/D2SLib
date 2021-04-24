@@ -31,7 +31,16 @@ File.WriteAllBytes(Environment.ExpandEnvironmentVariables($"%userprofile%/Saved 
 
 ```
 
-TODO: let others seed w/ their own mod txt files. currently this can be done if you build it yourself.
+How to seed the library with your own TXT files
+```
+TXT txt = new TXT();
+txt.ItemStatCostTXT = ItemStatCostTXT.Read(@"ItemStatCost.txt");
+txt.ItemsTXT.ArmorTXT = ArmorTXT.Read(@"Armor.txt");
+txt.ItemsTXT.WeaponsTXT = WeaponsTXT.Read(@"Weapons.txt");
+txt.ItemsTXT.MiscTXT = MiscTXT.Read(@"Misc.txt");
+Core.TXT = txt;
+D2S character = Core.ReadD2S(File.ReadAllBytes(@"DannyIsGreat.d2s"));
+```
 
 ##### Useful Links:
 * https://github.com/d07RiV/d07riv.github.io/blob/master/d2r.html (credits to d07riv for reversing the item code on D2R)
