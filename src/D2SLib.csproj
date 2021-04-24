@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Nullable></Nullable>
+    <Company />
+    <Authors>dschu012</Authors>
+    <PackageTags>d2s d2i diablo-ii diablo2 d2r</PackageTags>
+    <Description>Read and write saves from Diablo 2. Supports versions 1.10 through Diablo II: Resurrected (1.15). Supports both d2s (player saves) and d2i (shared stash).</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="test\**" />
+    <EmbeddedResource Remove="test\**" />
+    <None Remove="test\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Armor.txt" />
+    <None Remove="Resources\Misc.txt" />
+    <None Remove="Resources\Weapons.txt" />
+    <None Remove="TextFile1.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Armor.txt" />
+    <EmbeddedResource Include="Resources\ItemStatCost.txt" />
+    <EmbeddedResource Include="Resources\Misc.txt" />
+    <EmbeddedResource Include="Resources\Weapons.txt" />
+  </ItemGroup>
+
+</Project>
