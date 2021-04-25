@@ -86,7 +86,7 @@ namespace D2SLib.Model.Save
         public UInt16? Header { get; set; }
         [JsonIgnore]
         public BitArray? Flags { get; set; }
-        public UInt16 Version { get; set; }
+        public string Version { get; set; }
         public ItemMode Mode { get; set; }
         public ItemLocation Location { get; set; }
         public byte X { get; set; }
@@ -210,11 +210,11 @@ namespace D2SLib.Model.Save
             item.Flags = new BitArray(reader.ReadBytes(4));
             if(version <= 0x60)
             {
-                item.Version = reader.ReadUInt16(10);
+                item.Version = Convert.ToString(reader.ReadUInt16(10), 10);
             } 
             else if(version >= 0x61)
             {
-                item.Version = reader.ReadUInt16(3);
+                item.Version = Convert.ToString(reader.ReadUInt16(3), 2);
             }
             item.Mode = (ItemMode)reader.ReadByte(3);
             item.Location = (ItemLocation)reader.ReadByte(4);
@@ -267,11 +267,12 @@ namespace D2SLib.Model.Save
             }
             if (version <= 0x60)
             {
-                writer.WriteUInt16(item.Version, 10);
+                //todo. how do we handle 1.15 version to 1.14. maybe this should be a string
+                writer.WriteUInt16(Convert.ToUInt16(item.Version, 10), 10);
             }
             else if (version >= 0x61)
             {
-                writer.WriteUInt16(item.Version, 3);
+                writer.WriteUInt16(Convert.ToUInt16(item.Version, 2), 3);
             }
             writer.WriteByte((byte)item.Mode, 3);
             writer.WriteByte((byte)item.Location, 4);

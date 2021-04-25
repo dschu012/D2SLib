@@ -3615,7 +3615,7 @@
     "Count": 27,
     "Items": [
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 1,
         "Location": 10,
         "X": 10,
@@ -3699,7 +3699,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 1,
         "Location": 3,
         "X": 3,
@@ -3711,7 +3711,7 @@
         "TotalNumberOfSockets": 3,
         "SocketedItems": [
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 0,
@@ -3760,7 +3760,7 @@
             "IsRuneword": false
           },
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 1,
@@ -3809,7 +3809,7 @@
             "IsRuneword": false
           },
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 2,
@@ -3940,7 +3940,7 @@
         "IsRuneword": true
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 1,
         "Location": 8,
         "X": 8,
@@ -4024,7 +4024,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 0,
@@ -4077,7 +4077,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 0,
@@ -4197,7 +4197,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 0,
@@ -4250,7 +4250,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 0,
@@ -4303,7 +4303,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 9,
@@ -4574,7 +4574,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 9,
@@ -4845,7 +4845,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 9,
@@ -5116,7 +5116,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 9,
@@ -5387,7 +5387,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 8,
@@ -5658,7 +5658,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 8,
@@ -5929,7 +5929,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 8,
@@ -6200,7 +6200,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 1,
@@ -6253,7 +6253,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 1,
         "Location": 2,
         "X": 2,
@@ -6337,7 +6337,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 8,
@@ -6608,7 +6608,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 7,
@@ -6879,7 +6879,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 7,
@@ -7150,7 +7150,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 7,
@@ -7421,7 +7421,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 7,
@@ -7692,7 +7692,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 0,
         "Location": 0,
         "X": 2,
@@ -7745,7 +7745,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 2,
         "Location": 0,
         "X": 0,
@@ -7794,7 +7794,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 1,
         "Location": 11,
         "X": 11,
@@ -7905,7 +7905,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 1,
         "Location": 1,
         "X": 1,
@@ -7964,7 +7964,7 @@
         "IsRuneword": false
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 1,
         "Location": 4,
         "X": 4,
@@ -7976,7 +7976,7 @@
         "TotalNumberOfSockets": 4,
         "SocketedItems": [
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 0,
@@ -8025,7 +8025,7 @@
             "IsRuneword": false
           },
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 1,
@@ -8074,7 +8074,7 @@
             "IsRuneword": false
           },
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 2,
@@ -8123,7 +8123,7 @@
             "IsRuneword": false
           },
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 3,
@@ -8274,7 +8274,7 @@
         "IsRuneword": true
       },
       {
-        "Version": 5,
+        "Version": "101",
         "Mode": 1,
         "Location": 5,
         "X": 5,
@@ -8286,7 +8286,7 @@
         "TotalNumberOfSockets": 4,
         "SocketedItems": [
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 0,
@@ -8335,7 +8335,7 @@
             "IsRuneword": false
           },
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 1,
@@ -8384,7 +8384,7 @@
             "IsRuneword": false
           },
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 2,
@@ -8433,7 +8433,7 @@
             "IsRuneword": false
           },
           {
-            "Version": 5,
+            "Version": "101",
             "Mode": 6,
             "Location": 0,
             "X": 3,
