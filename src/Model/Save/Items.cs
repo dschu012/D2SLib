@@ -197,12 +197,12 @@ namespace D2SLib.Model.Save
 
         protected static void WritePlayerName(BitWriter writer, string name)
         {
-            byte[] bytes = Encoding.ASCII.GetBytes(name);
+            byte[] bytes = Encoding.ASCII.GetBytes(name.Replace("\0",""));
             for (int i = 0; i < bytes.Length; i++)
             {
-                writer.WriteByte(bytes[i]);
+                writer.WriteByte(bytes[i], 7);
             }
-            writer.WriteByte((byte)'\0');
+            writer.WriteByte((byte)'\0', 7);
         }
 
         protected static void ReadCompact(BitReader reader, Item item, UInt32 version)
