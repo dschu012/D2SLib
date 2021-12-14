@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Nullable></Nullable>
+    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<LangVersion>latest</LangVersion>
     <Company />
     <Authors>dschu012</Authors>
     <PackageTags>d2s d2i diablo-ii diablo2 d2r</PackageTags>
@@ -12,19 +14,6 @@
     <RepositoryType>git</RepositoryType>
     <Version>1.0.2</Version>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="test\**" />
-    <EmbeddedResource Remove="test\**" />
-    <None Remove="test\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Resources\Armor.txt" />
-    <None Remove="Resources\Misc.txt" />
-    <None Remove="Resources\Weapons.txt" />
-    <None Remove="TextFile1.txt" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\Armor.txt" />
