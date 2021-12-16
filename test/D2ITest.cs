@@ -1,10 +1,5 @@
 ﻿using D2SLib;
 using D2SLib.Model.Save;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 
 namespace D2SLibTests
 {

@@ -1,123 +1,98 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace D2SLib.IO
+namespace D2SLib.IO;
+
+public sealed class BitReader : IBitReader, IDisposable
 {
-    public class BitReader : IDisposable
+    private const int STACK_MAX = 100;
+    private BitField _bits;
+
+    public int Position { get; private set; }
+
+    public BitReader(ReadOnlySpan<byte> bytes)
     {
-        BitArray _bits;
-        public int Position { get; private set; }
+        Position = 0;
+        _bits = new BitField(bytes);
+    }
 
-        public BitReader(byte[] bytes)
-        {
-            Position = 0;
-            _bits = new BitArray(bytes);
-        }
-        public bool ReadBit()
-        {
-            return _bits[Position++];
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetBytesForBits(int numberOfBits) => (numberOfBits - 1) / 8 + 1;
 
-        public byte[] ReadBits(int numberOfBits)
-        {
-            byte[] bytes = new byte[(numberOfBits-1)/8+1];
-            int byteIndex = 0;
-            int bitIndex = 0;
-            for(int i = 0; i < numberOfBits; i++)
-            {
-                if(_bits[Position + i])
-                {
-                    bytes[byteIndex] |= (byte)(1 << bitIndex);
-                }
-                bitIndex++;
-                if(bitIndex == 8)
-                {
-                    byteIndex++;
-                    bitIndex = 0;
-                }
-            }
-            Position += numberOfBits;
-            return bytes;
-        }
+    public bool ReadBit() => _bits[Position++];
 
-        public byte[] ReadBytes(int numberOfBytes)
-        {
-            return ReadBits(numberOfBytes * 8);
-        }
+    public byte[] ReadBits(int numberOfBits)
+    {
+        byte[] bytes = new byte[GetBytesForBits(numberOfBits)];
+        ReadBits(numberOfBits, bytes);
+        return bytes;
+    }
 
-        public byte ReadByte(int bits)
-        {
-            byte[] bytes = ReadBits(bits);
-            Array.Resize<byte>(ref bytes, 1);
-            return bytes[0];
-        }
+    public int ReadBits(int numberOfBits, Span<byte> output)
+    {
+        int byteCount = _bits.GetBytes(Position, numberOfBits, output);
+        Position += numberOfBits;
+        return byteCount;
+    }
 
-        public byte ReadByte()
-        {
-            return ReadBytes(1)[0];
-        }
+    public byte[] ReadBytes(int numberOfBytes) => ReadBits(numberOfBytes * 8);
 
-        public UInt16 ReadUInt16(int bits)
-        {
-            byte[] bytes = ReadBits(bits);
-            Array.Resize<byte>(ref bytes, 2);
-            return BitConverter.ToUInt16(bytes, 0); ;
-        }
+    public int ReadBytes(int numberOfBytes, Span<byte> output) 
+        => ReadBits(numberOfBytes * 8, output);
 
-        public UInt16 ReadUInt16()
-        {
-            return BitConverter.ToUInt16(ReadBytes(2), 0);
-        }
+    public byte ReadByte(int bits)
+    {
+        int byteCount = GetBytesForBits(bits);
+        Span<byte> bytes = byteCount > STACK_MAX ? new byte[byteCount] : stackalloc byte[byteCount];
+        int bytesRead = ReadBits(bits, bytes);
+        return bytes[0];
+    }
 
-        public UInt32 ReadUInt32(int bits)
-        {
-            byte[] bytes = ReadBits(bits);
-            Array.Resize<byte>(ref bytes, 4);
-            return BitConverter.ToUInt32(bytes, 0);
-        }
+    public byte ReadByte() => ReadByte(8);
 
-        public UInt32 ReadUInt32()
-        {
-            return BitConverter.ToUInt32(ReadBytes(4), 0);
-        }
+    public ushort ReadUInt16(int bits)
+    {
+        var result = _bits.GetUInt16(Position, bits);
+        Position += bits;
+        return result;
+    }
 
-        public Int32 ReadInt32(int bits)
-        {
-            byte[] bytes = ReadBits(bits);
-            Array.Resize<byte>(ref bytes, 4);
-            return BitConverter.ToInt32(bytes, 0);
-        }
+    public ushort ReadUInt16() => ReadUInt16(sizeof(ushort) * 8);
 
-        public Int32 ReadInt32()
-        {
-            return BitConverter.ToInt32(ReadBytes(4), 0);
-        }
+    public uint ReadUInt32(int bits)
+    {
+        var result = _bits.GetUInt32(Position, bits);
+        Position += bits;
+        return result;
+    }
 
-        public string ReadString(int bytes)
-        {
-            return System.Text.Encoding.ASCII.GetString(ReadBytes(bytes)).Trim('\0');
-        }
+    public uint ReadUInt32() => ReadUInt32(sizeof(uint) * 8);
 
-        public void SeekBits(int bitPosition)
-        {
-            Position = bitPosition;
-        }
-        public void Seek(int bytePostion)
-        {
-            SeekBits(bytePostion * 8);
-        }
+    public int ReadInt32(int bits)
+    {
+        var result = _bits.GetInt32(Position, bits);
+        Position += bits;
+        return result;
+    }
 
-        public void Align()
-        {
-            Position = (Position + 7) & ~7;
-        }
+    public int ReadInt32() => ReadInt32(sizeof(int) * 8);
 
-        public void Dispose()
-        {
-            _bits = null;
-        }
+    public string ReadString(int byteCount)
+    {
+        Span<byte> bytes = byteCount > STACK_MAX ? new byte[byteCount] : stackalloc byte[byteCount];
+        int readBytes = ReadBytes(byteCount, bytes);
+        bytes = bytes[..readBytes];
+        return Encoding.ASCII.GetString(bytes.Trim((byte)0));
+    }
+
+    public void SeekBits(int bitPosition) => Position = bitPosition;
+
+    public void Seek(int bytePostion) => SeekBits(bytePostion * 8);
+
+    public void Align() => Position = (Position + 7) & ~7;
+
+    public void Dispose()
+    {
+        Interlocked.Exchange(ref _bits!, null)?.Dispose();
     }
 }

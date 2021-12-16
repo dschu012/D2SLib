@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
@@ -13,6 +13,8 @@
     <RepositoryUrl>https://github.com/dschu012/D2SLib</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Version>1.0.2</Version>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +22,10 @@
     <EmbeddedResource Include="Resources\ItemStatCost.txt" />
     <EmbeddedResource Include="Resources\Misc.txt" />
     <EmbeddedResource Include="Resources\Weapons.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Toolkit.HighPerformance" Version="7.1.2" />
   </ItemGroup>
 
 </Project>
