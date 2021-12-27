@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace D2SLib.Model.Save;
 
-public enum ItemMode
+public enum ItemMode : byte
 {
     Stored = 0x0,
     Equipped = 0x1,
@@ -14,7 +14,7 @@ public enum ItemMode
     Socket = 0x6,
 }
 
-public enum ItemLocation
+public enum ItemLocation : byte
 {
     None,
     Head,
@@ -31,7 +31,7 @@ public enum ItemLocation
     SwapLeft
 }
 
-public enum ItemQuality
+public enum ItemQuality : byte
 {
     Inferior = 0x1,
     Normal,
@@ -46,17 +46,33 @@ public enum ItemQuality
 
 public class ItemList
 {
+    private ItemList(ushort header, ushort count)
+    {
+        Header = header;
+        Count = count;
+        Items = new List<Item>(count);
+    }
+
     public ushort? Header { get; set; }
     public ushort Count { get; set; }
-    public List<Item> Items { get; set; } = new List<Item>();
+    public List<Item> Items { get; }
+
+    public void Write(BitWriter writer, uint version)
+    {
+        writer.WriteUInt16(Header ?? 0x4D4A);
+        writer.WriteUInt16(Count);
+        for (int i = 0; i < Count; i++)
+        {
+            Items[i].Write(writer, version);
+        }
+    }
 
     public static ItemList Read(BitReader reader, uint version)
     {
-        var itemList = new ItemList
-        {
-            Header = reader.ReadUInt16(),
-            Count = reader.ReadUInt16()
-        };
+        var itemList = new ItemList(
+            header: reader.ReadUInt16(),
+            count: reader.ReadUInt16()
+        );
         for (int i = 0; i < itemList.Count; i++)
         {
             itemList.Items.Add(Item.Read(reader, version));
@@ -64,18 +80,12 @@ public class ItemList
         return itemList;
     }
 
+    [Obsolete("Try the non-allocating overload!")]
     public static byte[] Write(ItemList itemList, uint version)
     {
-        using (var writer = new BitWriter())
-        {
-            writer.WriteUInt16(itemList.Header ?? 0x4D4A);
-            writer.WriteUInt16(itemList.Count);
-            for (int i = 0; i < itemList.Count; i++)
-            {
-                writer.WriteBytes(Item.Write(itemList.Items[i], version));
-            }
-            return writer.ToArray();
-        }
+        using var writer = new BitWriter();
+        itemList.Write(writer, version);
+        return writer.ToArray();
     }
 }
 
@@ -83,16 +93,16 @@ public class Item
 {
     public ushort? Header { get; set; }
     [JsonIgnore]
-    public IList<bool>? Flags { get; set; }
-    public string Version { get; set; }
+    public IList<bool> Flags { get; set; } = new InternalBitArray(4);
+    public string? Version { get; set; }
     public ItemMode Mode { get; set; }
     public ItemLocation Location { get; set; }
     public byte X { get; set; }
     public byte Y { get; set; }
     public byte Page { get; set; }
     public byte EarLevel { get; set; }
-    public string PlayerName { get; set; } //used for personalized or ears
-    public string Code { get; set; }
+    public string PlayerName { get; set; } = string.Empty; //used for personalized or ears
+    public string Code { get; set; } = string.Empty;
     public byte NumberOfSocketedItems { get; set; }
     public byte TotalNumberOfSockets { get; set; }
     public List<Item> SocketedItems { get; set; } = new List<Item>();
@@ -118,7 +128,7 @@ public class Item
     public ushort Durability { get; set; }
     public ushort Quantity { get; set; }
     public byte SetItemMask { get; set; }
-    public List<ItemStatList> StatLists { get; set; } = new List<ItemStatList>();
+    public List<ItemStatList> StatLists { get; } = new List<ItemStatList>();
     public bool IsIdentified { get => Flags[4]; set => Flags[4] = value; }
     public bool IsSocketed { get => Flags[11]; set => Flags[11] = value; }
     public bool IsNew { get => Flags[13]; set => Flags[13] = value; }
@@ -129,12 +139,29 @@ public class Item
     public bool IsPersonalized { get => Flags[24]; set => Flags[24] = value; }
     public bool IsRuneword { get => Flags[26]; set => Flags[26] = value; }
 
-    public static Item Read(byte[] bytes, uint version)
+    public void Write(BitWriter writer, uint version)
     {
-        using (var reader = new BitReader(bytes))
+        if (version <= 0x60)
         {
-            return Read(reader, version);
+            writer.WriteUInt16(Header ?? 0x4D4A);
         }
+        WriteCompact(writer, this, version);
+        if (!IsCompact)
+        {
+            WriteComplete(writer, this, version);
+        }
+        writer.Align();
+        for (int i = 0; i < NumberOfSocketedItems; i++)
+        {
+            SocketedItems[i].Write(writer, version);
+        }
+    }
+
+    [Obsolete("Try the direct-read overload!")]
+    public static Item Read(ReadOnlySpan<byte> bytes, uint version)
+    {
+        using var reader = new BitReader(bytes);
+        return Read(reader, version);
     }
 
     public static Item Read(BitReader reader, uint version)
@@ -157,26 +184,12 @@ public class Item
         return item;
     }
 
+    [Obsolete("Try the non-allocating overload!")]
     public static byte[] Write(Item item, uint version)
     {
-        using (var writer = new BitWriter())
-        {
-            if (version <= 0x60)
-            {
-                writer.WriteUInt16(item.Header ?? 0x4D4A);
-            }
-            WriteCompact(writer, item, version);
-            if (!item.IsCompact)
-            {
-                WriteComplete(writer, item, version);
-            }
-            writer.Align();
-            for (int i = 0; i < item.NumberOfSocketedItems; i++)
-            {
-                writer.WriteBytes(Item.Write(item.SocketedItems[i], version));
-            }
-            return writer.ToArray();
-        }
+        using var writer = new BitWriter();
+        item.Write(writer, version);
+        return writer.ToArray();
     }
 
     protected static string ReadPlayerName(BitReader reader)
@@ -206,7 +219,7 @@ public class Item
     protected static void ReadCompact(BitReader reader, Item item, uint version)
     {
         Span<byte> bytes = stackalloc byte[4];
-        reader.ReadBytes(4, bytes);
+        reader.ReadBytes(bytes);
         item.Flags = new InternalBitArray(bytes);
         if (version <= 0x60)
         {
@@ -229,7 +242,7 @@ public class Item
         }
         else
         {
-            item.Code = "";
+            item.Code = string.Empty;
             if (version <= 0x60)
             {
                 item.Code = reader.ReadString(4);
@@ -362,7 +375,8 @@ public class Item
         {
             item.PlayerName = ReadPlayerName(reader);
         }
-        if (item.Code.Trim() == "tbk" || item.Code.Trim() == "ibk")
+        var trimmedCode = item.Code.AsSpan().Trim();
+        if (trimmedCode.SequenceEqual("tbk") || trimmedCode.SequenceEqual("ibk"))
         {
             item.MagicSuffixIds[0] = reader.ReadByte(5);
         }
@@ -376,7 +390,7 @@ public class Item
         var row = Core.TXT.ItemsTXT.GetByCode(item.Code);
         bool isArmor = Core.TXT.ItemsTXT.IsArmor(item.Code);
         bool isWeapon = Core.TXT.ItemsTXT.IsWeapon(item.Code);
-        bool isStackable = row["stackable"].ToBool();
+        bool isStackable = row?["stackable"].ToBool() ?? false;
         if (isArmor)
         {
             //why do i need this cast?
@@ -481,7 +495,8 @@ public class Item
         {
             WritePlayerName(writer, item.PlayerName);
         }
-        if (item.Code.Trim() == "tbk" || item.Code.Trim() == "ibk")
+        var trimmedCode = item.Code.AsSpan().Trim();
+        if (trimmedCode.SequenceEqual("tbk") || trimmedCode.SequenceEqual("ibk"))
         {
             writer.WriteUInt16(item.MagicSuffixIds[0], 5);
         }
@@ -494,7 +509,7 @@ public class Item
         var row = Core.TXT.ItemsTXT.GetByCode(item.Code);
         bool isArmor = Core.TXT.ItemsTXT.IsArmor(item.Code);
         bool isWeapon = Core.TXT.ItemsTXT.IsWeapon(item.Code);
-        bool isStackable = row["stackable"].ToBool();
+        bool isStackable = row?["stackable"].ToBool() ?? false;
         if (isArmor)
         {
             writer.WriteUInt16((ushort)(item.Armor - itemStatCostTXT["armorclass"]["Save Add"].ToUInt16()), 11);
@@ -538,6 +553,13 @@ public class Item
 
 public class ItemStatList
 {
+    private const ushort magicmindam = 52;
+    private const ushort item_maxdamage_percent = 17;
+    private const ushort firemindam = 48;
+    private const ushort lightmindam = 50;
+    private const ushort coldmindam = 54;
+    private const ushort poisonmindam = 57;
+
     public List<ItemStat> Stats { get; set; } = new List<ItemStat>();
 
     public static ItemStatList Read(BitReader reader)
@@ -548,16 +570,11 @@ public class ItemStatList
         {
             itemStatList.Stats.Add(ItemStat.Read(reader, id));
             //https://github.com/ThePhrozenKeep/D2MOO/blob/master/source/D2Common/src/Items/Items.cpp#L7332
-            if (id == 52        //magicmindam
-                || id == 17     //item_maxdamage_percent
-                || id == 48     //firemindam
-                || id == 50)    //lightmindam
+            if (id is magicmindam or item_maxdamage_percent or firemindam or lightmindam)
             {
                 itemStatList.Stats.Add(ItemStat.Read(reader, (ushort)(id + 1)));
             }
-            else if (id == 54  //coldmindam
-              || id == 57     //poisonmindam
-              )
+            else if (id is coldmindam or poisonmindam)
             {
                 itemStatList.Stats.Add(ItemStat.Read(reader, (ushort)(id + 1)));
                 itemStatList.Stats.Add(ItemStat.Read(reader, (ushort)(id + 2)));
@@ -579,16 +596,11 @@ public class ItemStatList
 
             //assume these stats are in order...
             //https://github.com/ThePhrozenKeep/D2MOO/blob/master/source/D2Common/src/Items/Items.cpp#L7332
-            if (id == 52        //magicmindam
-                || id == 17     //item_maxdamage_percent
-                || id == 48     //firemindam
-                || id == 50)    //lightmindam
+            if (id is magicmindam or item_maxdamage_percent or firemindam or lightmindam)
             {
                 ItemStat.Write(writer, itemStatList.Stats[++i]);
             }
-            else if (id == 54  //coldmindam
-              || id == 57     //poisonmindam
-              )
+            else if (id is coldmindam or poisonmindam)
             {
                 ItemStat.Write(writer, itemStatList.Stats[++i]);
                 ItemStat.Write(writer, itemStatList.Stats[++i]);
@@ -602,7 +614,7 @@ public class ItemStatList
 public class ItemStat
 {
     public ushort? Id { get; set; }
-    public string? Stat { get; set; }
+    public string Stat { get; set; } = string.Empty;
     public int? SkillTab { get; set; }
     public int? SkillId { get; set; }
     public int? SkillLevel { get; set; }

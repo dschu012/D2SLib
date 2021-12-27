@@ -1,67 +1,77 @@
 ﻿using D2SLib.IO;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using System.Buffers.Binary;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+public class Header
 {
-    public class Header
+    //0x0000
+    public uint? Magic { get; set; }
+    //0x0004
+    public uint Version { get; set; }
+    //0x0008
+    public uint Filesize { get; set; }
+    //0x000c
+    public uint Checksum { get; set; }
+
+    public void Write(BitWriter writer)
     {
-        //0x0000
-        public UInt32? Magic { get; set; }
-        //0x0004
-        public UInt32 Version { get; set; }
-        //0x0008
-        public UInt32 Filesize { get; set; }
-        //0x000c
-        public UInt32 Checksum { get; set; }
+        writer.WriteUInt32(Magic ?? 0xAA55AA55);
+        writer.WriteUInt32(Version);
+        writer.WriteUInt32(Filesize);
+        writer.WriteUInt32(Checksum);
+    }
 
-        public static Header Read(byte[] bytes)
+    public static Header Read(BitReader reader)
+    {
+        var header = new Header
         {
-            using (BitReader reader = new BitReader(bytes))
-            {
-                Header header = new Header();
-                header.Magic = reader.ReadUInt32();
-                header.Version = reader.ReadUInt32();
-                header.Filesize = reader.ReadUInt32();
-                header.Checksum = reader.ReadUInt32();
-                return header;
-            }
-        }
+            Magic = reader.ReadUInt32(),
+            Version = reader.ReadUInt32(),
+            Filesize = reader.ReadUInt32(),
+            Checksum = reader.ReadUInt32()
+        };
+        return header;
+    }
 
-        public static byte[] Write(Header header)
-        {
-            using(BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt32(header.Magic ?? 0xAA55AA55);
-                writer.WriteUInt32(header.Version);
-                writer.WriteUInt32(header.Filesize);
-                writer.WriteUInt32(header.Checksum);
-                return writer.ToArray();
-            }
-        }
+    [Obsolete("Try the direct-read overload!")]
+    public static Header Read(ReadOnlySpan<byte> bytes)
+    {
+        using var reader = new BitReader(bytes);
+        return Read(reader);
+    }
 
-        public static void Fix(byte[] bytes)
-        {
-            FixSize(bytes);
-            FixChecksum(bytes);
-        }
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(Header header)
+    {
+        using var writer = new BitWriter();
+        header.Write(writer);
+        return writer.ToArray();
+    }
 
-        public static void FixSize(byte[] bytes)
+    public static void Fix(Span<byte> bytes)
+    {
+        FixSize(bytes);
+        FixChecksum(bytes);
+    }
+
+    public static void FixSize(Span<byte> bytes)
+    {
+        Span<byte> length = stackalloc byte[sizeof(uint)];
+        BinaryPrimitives.WriteUInt32LittleEndian(length, (uint)bytes.Length);
+        length.CopyTo(bytes[0x8..]);
+    }
+
+    public static void FixChecksum(Span<byte> bytes)
+    {
+        bytes[0xc..].Clear();
+        int checksum = 0;
+        for (int i = 0; i < bytes.Length; i++)
         {
-            byte[] length = BitConverter.GetBytes((UInt32)bytes.Length);
-            length.CopyTo(bytes, 0x8);
+            checksum = bytes[i] + (checksum * 2) + (checksum < 0 ? 1 : 0);
         }
-        public static void FixChecksum(byte[] bytes)
-        {
-            new byte[4].CopyTo(bytes, 0xc);
-            Int32 checksum = 0;
-            for(int i = 0; i < bytes.Length; i++)
-            {
-                checksum = bytes[i] + (checksum * 2) + (checksum < 0 ? 1 : 0);
-            }
-            BitConverter.GetBytes(checksum).CopyTo(bytes, 0xc);
-        }
+        Span<byte> csb = stackalloc byte[sizeof(int)];
+        BinaryPrimitives.WriteInt32LittleEndian(csb, checksum);
+        csb.CopyTo(bytes[0xc..]);
     }
 }

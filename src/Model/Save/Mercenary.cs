@@ -1,75 +1,86 @@
 ﻿using D2SLib.IO;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+public class Mercenary
 {
-    public class Mercenary
+    //is this right?
+    public ushort IsDead { get; set; }
+    public uint Id { get; set; }
+    public ushort NameId { get; set; }
+    public ushort TypeId { get; set; }
+    public uint Experience { get; set; }
+
+    public void Write(BitWriter writer)
     {
-        //is this right?
-        public UInt16 IsDead { get; set; }
-        public UInt32 Id { get; set; }
-        public UInt16 NameId { get; set; }
-        public UInt16 TypeId { get; set; }
-        public UInt32 Experience { get; set; }
+        writer.WriteUInt16(IsDead);
+        writer.WriteUInt32(Id);
+        writer.WriteUInt16(NameId);
+        writer.WriteUInt16(TypeId);
+        writer.WriteUInt32(Experience);
+    }
 
-        public static Mercenary Read(byte[] bytes)
+    public static Mercenary Read(BitReader reader)
+    {
+        var mercenary = new Mercenary
         {
-            Mercenary mercenary = new Mercenary();
-            using (BitReader reader = new BitReader(bytes))
-            {
-                mercenary.IsDead = reader.ReadUInt16();
-                mercenary.Id = reader.ReadUInt32();
-                mercenary.NameId = reader.ReadUInt16();
-                mercenary.TypeId = reader.ReadUInt16();
-                mercenary.Experience = reader.ReadUInt32();
-                return mercenary;
-            }
-        }
+            IsDead = reader.ReadUInt16(),
+            Id = reader.ReadUInt32(),
+            NameId = reader.ReadUInt16(),
+            TypeId = reader.ReadUInt16(),
+            Experience = reader.ReadUInt32()
+        };
+        return mercenary;
+    }
 
-        public static byte[] Write(Mercenary mercenary)
+    [Obsolete("Try the direct-read overload!")]
+    public static Mercenary Read(ReadOnlySpan<byte> bytes)
+    {
+        using var reader = new BitReader(bytes);
+        return Read(reader);
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(Mercenary mercenary)
+    {
+        using var writer = new BitWriter();
+        mercenary.Write(writer);
+        return writer.ToArray();
+    }
+}
+
+public class MercenaryItemList
+{
+    public ushort? Header { get; set; }
+    public ItemList? ItemList { get; set; }
+
+    public void Write(BitWriter writer, Mercenary mercenary, uint version)
+    {
+        writer.WriteUInt16(Header ?? 0x666A);
+        if (mercenary.Id != 0)
         {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt16(mercenary.IsDead);
-                writer.WriteUInt32(mercenary.Id);
-                writer.WriteUInt16(mercenary.NameId);
-                writer.WriteUInt16(mercenary.TypeId);
-                writer.WriteUInt32(mercenary.Experience);
-                return writer.ToArray();
-            }
+            ItemList?.Write(writer, version);
         }
     }
 
-    public class MercenaryItemList
+    public static MercenaryItemList Read(BitReader reader, Mercenary mercenary, uint version)
     {
-        public UInt16? Header { get; set; }
-        public ItemList ItemList { get; set; }
-
-        public static MercenaryItemList Read(BitReader reader, Mercenary mercenary, UInt32 version)
+        var mercenaryItemList = new MercenaryItemList
         {
-            MercenaryItemList mercenaryItemList = new MercenaryItemList();
-            mercenaryItemList.Header = reader.ReadUInt16();
-            if(mercenary.Id != 0)
-            {
-                mercenaryItemList.ItemList = ItemList.Read(reader, version);
-            }
-            return mercenaryItemList;
-        }
-
-        public static byte[] Write(MercenaryItemList mercenaryItemList, Mercenary mercenary, UInt32 version)
+            Header = reader.ReadUInt16()
+        };
+        if (mercenary.Id != 0)
         {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt16(mercenaryItemList.Header ?? 0x666A);
-                if (mercenary.Id != 0)
-                {
-                    writer.WriteBytes(ItemList.Write(mercenaryItemList.ItemList, version));
-                }
-                return writer.ToArray();
-            }
+            mercenaryItemList.ItemList = ItemList.Read(reader, version);
         }
+        return mercenaryItemList;
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(MercenaryItemList mercenaryItemList, Mercenary mercenary, uint version)
+    {
+        using var writer = new BitWriter();
+        mercenaryItemList.Write(writer, mercenary, version);
+        return writer.ToArray();
     }
 }

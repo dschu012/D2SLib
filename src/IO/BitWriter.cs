@@ -7,6 +7,8 @@ namespace D2SLib.IO;
 
 public sealed class BitWriter : IBitWriter, IDisposable
 {
+    private const int STACK_MAX = 0xff;
+
     private InternalBitArray _bits;
 
     private int _position = 0;

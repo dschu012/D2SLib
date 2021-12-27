@@ -70,6 +70,9 @@ public sealed class BitReader : IBitReader, IDisposable
     public int ReadBytes(int numberOfBytes, Span<byte> output) 
         => ReadBits(numberOfBytes * 8, output);
 
+    public int ReadBytes(Span<byte> output)
+        => ReadBits(output.Length * 8, output);
+
     [Obsolete("Try a non-allocating overload!")]
     public byte[] ReadBytes(int numberOfBytes) 
         => ReadBits(numberOfBytes * 8);
@@ -129,7 +132,7 @@ public sealed class BitReader : IBitReader, IDisposable
         using var pooledBytes = byteCount > STACK_MAX ? SpanOwner<byte>.Allocate(byteCount) : SpanOwner<byte>.Empty;
         Span<byte> bytes = byteCount > STACK_MAX ? pooledBytes.Span : stackalloc byte[byteCount];
         bytes.Clear();
-        int readBytes = ReadBytes(byteCount, bytes);
+        int readBytes = ReadBytes(bytes);
         bytes = bytes[..readBytes];
         return Encoding.ASCII.GetString(bytes.Trim((byte)0));
     }

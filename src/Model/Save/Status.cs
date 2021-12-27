@@ -1,49 +1,39 @@
 ﻿using D2SLib.IO;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
 using System.Text.Json.Serialization;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+public class Status
 {
-    public class Status
+    public Status(byte flags)
     {
-        [JsonIgnore]
-        public BitArray? Flags { get; set; }
-        public bool IsHardcore { get { return Flags[2]; } set { Flags[2] = value; } }
-        public bool IsDead { get { return Flags[3]; } set { Flags[3] = value; } }
-        public bool IsExpansion { get { return Flags[5]; } set { Flags[5] = value; } }
-        public bool IsLadder{ get { return Flags[6]; } set { Flags[6] = value; } }
+        Flags = new InternalBitArray(stackalloc byte[] { flags });
+    }
 
-        public static Status Read(byte bytes)
-        {
-            Status status = new Status();
-            status.Flags = new BitArray(new byte[] { bytes });
-            return status;
-        }
+    [JsonIgnore]
+    public IList<bool> Flags { get; } 
+    public bool IsHardcore { get => Flags[2]; set => Flags[2] = value; }
+    public bool IsDead { get => Flags[3]; set => Flags[3] = value; }
+    public bool IsExpansion { get => Flags[5]; set => Flags[5] = value; }
+    public bool IsLadder { get => Flags[6]; set => Flags[6] = value; }
 
-        public static byte[] Write(Status status)
-        {
-            using (BitWriter writer = new BitWriter())
-            {
-                BitArray bits = status.Flags;
-                if (bits == null)
-                {
-                    bits = new BitArray(8);
-                    bits[2] = status.IsHardcore;
-                    bits[3] = status.IsDead;
-                    bits[4] = status.IsExpansion;
-                    bits[5] = status.IsLadder;
-                }
-                foreach(var bit in bits.Cast<bool>())
-                {
-                    writer.WriteBit(bit);
-                }
-                return writer.ToArray();
-            }
-        }
+    public void Write(BitWriter writer)
+    {
+        var bits = (InternalBitArray)Flags;
+        writer.WriteBits(bits);
+    }
+
+    public static Status Read(byte bytes)
+    {
+        var status = new Status(bytes);
+        return status;
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(Status status)
+    {
+        using var writer = new BitWriter();
+        status.Write(writer);
+        return writer.ToArray();
     }
 }
