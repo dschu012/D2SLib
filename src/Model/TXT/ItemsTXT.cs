@@ -32,9 +32,9 @@ namespace D2SLib.Model.TXT
             }
         }
 
-        public TXTRow this[string i] => this.GetByCode(i);
+        public TXTRow? this[string i] => this.GetByCode(i);
 
-        public TXTRow GetByCode(string code)
+        public TXTRow? GetByCode(string code)
         {
             return ArmorTXT[code] ??
                 WeaponsTXT[code] ??
@@ -82,7 +82,7 @@ namespace D2SLib.Model.TXT
 
     public class ArmorTXT : TXTFile
     {
-        public TXTRow this[string i] => this.GetByColumnAndValue("code", i);
+        public TXTRow? this[string i] => this.GetByColumnAndValue("code", i);
 
         public static ArmorTXT Read(Stream data)
         {
@@ -100,7 +100,7 @@ namespace D2SLib.Model.TXT
     }
     public class WeaponsTXT : TXTFile
     {
-        public TXTRow this[string i] => this.GetByColumnAndValue("code", i);
+        public TXTRow? this[string i] => this.GetByColumnAndValue("code", i);
 
         public static WeaponsTXT Read(Stream data)
         {
@@ -118,7 +118,7 @@ namespace D2SLib.Model.TXT
     }
     public class MiscTXT : TXTFile
     {
-        public TXTRow this[string i] => this.GetByColumnAndValue("code", i);
+        public TXTRow? this[string i] => this.GetByColumnAndValue("code", i);
 
         public static MiscTXT Read(Stream data)
         {

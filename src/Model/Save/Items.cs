@@ -372,7 +372,8 @@ public class Item
         item.HasRealmData = reader.ReadBit();
         if (item.HasRealmData)
         {
-            reader.ReadBits(96);
+            //reader.ReadBits(96);
+            reader.AdvanceBits(96);
         }
         var itemStatCostTXT = Core.TXT.ItemStatCostTXT;
         var row = Core.TXT.ItemsTXT.GetByCode(item.Code);

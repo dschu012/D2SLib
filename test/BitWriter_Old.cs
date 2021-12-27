@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 
-namespace D2SLib.IO;
+namespace D2SLibTests;
 
-public class BitWriter : IDisposable
+public class BitWriter_Old : IDisposable
 {
     private BitArray _bits;
 
@@ -20,13 +20,13 @@ public class BitWriter : IDisposable
         }
     }
     public int Length { get; private set; }
-    public BitWriter(int initialCapacity)
+    public BitWriter_Old(int initialCapacity)
     {
         _bits = new BitArray(initialCapacity);
         Position = 0;
     }
 
-    public BitWriter() : this(1024)
+    public BitWriter_Old() : this(1024)
     {
     }
 
@@ -103,5 +103,5 @@ public class BitWriter : IDisposable
     public void SeekBits(int bitPosition) => Position = bitPosition;
     public void Seek(int bytePostion) => SeekBits(bytePostion * 8);
     public void Align() => Position = (Position + 7) & ~7;
-    public void Dispose() => _bits = null;
+    public void Dispose() => _bits = null!;
 }
