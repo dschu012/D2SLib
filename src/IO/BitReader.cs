@@ -1,61 +1,37 @@
 ﻿using Microsoft.Toolkit.HighPerformance.Buffers;
 using System.Buffers;
-using System.Collections;
-using System.Runtime.CompilerServices;
 using System.Text;
 using static System.Buffers.Binary.BinaryPrimitives;
+using static D2SLib.IO.InternalBitArray;
 
 namespace D2SLib.IO;
 
-public sealed class BitReader : IDisposable, IBitReader
+public sealed class BitReader : IBitReader, IDisposable
 {
     private const int STACK_MAX = 0xff;
 
-    private BitArray _bits;
+    private InternalBitArray _bits;
     public int Position { get; private set; }
-
-    public BitReader(byte[] bytes)
-    {
-        Position = 0;
-        _bits = new BitArray(bytes);
-    }
 
     public BitReader(ReadOnlySpan<byte> bytes)
     {
-        // BitArray doesn't support spans yet, so we have to copy
-        // the bytes into a real byte array, pooled to minimize allocations.
         Position = 0;
-        var pooledBytes = ArrayPool<byte>.Shared.Rent(bytes.Length);
-        try
-        {
-            _bits = new BitArray(pooledBytes)
-            {
-                // because the pooled array might be longer than we requested
-                Length = bytes.Length * 8
-            };
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(pooledBytes);
-        }
+        _bits = new InternalBitArray(bytes);
     }
 
     public bool ReadBit() => _bits[Position++];
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetBytesForBits(int numberOfBits) => (numberOfBits + 7) / 8;
-
     [Obsolete("Try a non-allocating overload!")]
     public byte[] ReadBits(int numberOfBits)
     {
-        byte[] bytes = new byte[GetBytesForBits(numberOfBits)];
+        byte[] bytes = new byte[GetByteArrayLengthFromBitLength(numberOfBits)];
         ReadBits(numberOfBits, bytes);
         return bytes;
     }
 
     public MemoryOwner<byte> ReadBitsPooled(int numberOfBits)
     {
-        var bytes = MemoryOwner<byte>.Allocate(GetBytesForBits(numberOfBits));
+        var bytes = MemoryOwner<byte>.Allocate(GetByteArrayLengthFromBitLength(numberOfBits));
         ReadBits(numberOfBits, bytes.Span);
         return bytes;
     }
@@ -65,7 +41,7 @@ public sealed class BitReader : IDisposable, IBitReader
 
     public int ReadBits(int numberOfBits, Span<byte> output)
     {
-        int byteCount = GetBytesForBits(numberOfBits);
+        int byteCount = GetByteArrayLengthFromBitLength(numberOfBits);
 
         if (output.Length < byteCount)
             throw new ArgumentOutOfRangeException(nameof(output));

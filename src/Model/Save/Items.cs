@@ -1,6 +1,5 @@
 ﻿using D2SLib.IO;
 using D2SLib.Model.TXT;
-using System.Collections;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -84,7 +83,7 @@ public class Item
 {
     public ushort? Header { get; set; }
     [JsonIgnore]
-    public BitArray? Flags { get; set; }
+    public IList<bool>? Flags { get; set; }
     public string Version { get; set; }
     public ItemMode Mode { get; set; }
     public ItemLocation Location { get; set; }
@@ -206,7 +205,9 @@ public class Item
 
     protected static void ReadCompact(BitReader reader, Item item, uint version)
     {
-        item.Flags = new BitArray(reader.ReadBytes(4));
+        Span<byte> bytes = stackalloc byte[4];
+        reader.ReadBytes(4, bytes);
+        item.Flags = new InternalBitArray(bytes);
         if (version <= 0x60)
         {
             item.Version = Convert.ToString(reader.ReadUInt16(10), 10);
@@ -246,10 +247,9 @@ public class Item
 
     protected static void WriteCompact(BitWriter writer, Item item, uint version)
     {
-        var flags = item.Flags;
-        if (flags == null)
+        if (item.Flags is not InternalBitArray flags)
         {
-            flags = new BitArray(32);
+            flags = new InternalBitArray(32);
             flags[4] = item.IsIdentified;
             flags[11] = item.IsSocketed;
             flags[13] = item.IsNew;
@@ -260,10 +260,7 @@ public class Item
             flags[24] = item.IsPersonalized;
             flags[26] = item.IsRuneword;
         }
-        foreach (bool flag in flags.Cast<bool>())
-        {
-            writer.WriteBit(flag);
-        }
+        writer.WriteBits(flags);
         if (version <= 0x60)
         {
             //todo. how do we handle 1.15 version to 1.14. maybe this should be a string
