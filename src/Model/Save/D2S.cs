@@ -104,7 +104,7 @@ public class D2S
             RealmData = reader.ReadBytes(140),
             Quests = QuestsSection.Read(reader),
             Waypoints = WaypointsSection.Read(reader),
-            NPCDialog = NPCDialogSection.Read(reader.ReadBytes(52)),
+            NPCDialog = NPCDialogSection.Read(reader),
             Attributes = Attributes.Read(reader)
         };
         d2s.ClassSkills = ClassSkills.Read(reader, d2s.ClassId);
@@ -155,7 +155,7 @@ public class D2S
         writer.WriteBytes(d2s.RealmData ?? new byte[140]);
         d2s.Quests.Write(writer);
         d2s.Waypoints.Write(writer);
-        writer.WriteBytes(NPCDialogSection.Write(d2s.NPCDialog));
+        d2s.NPCDialog.Write(writer);
         d2s.Attributes.Write(writer);
         d2s.ClassSkills.Write(writer);
         d2s.PlayerItemList.Write(writer, d2s.Header.Version);
