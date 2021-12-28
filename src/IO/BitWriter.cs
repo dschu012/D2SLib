@@ -98,7 +98,6 @@ public sealed class BitWriter : IBitWriter, IDisposable
     public void WriteInt32(int value) => WriteBytes(BitConverter.GetBytes(value), sizeof(int) * 8);
     public void WriteString(string s, int length) => WriteBytes(System.Text.Encoding.ASCII.GetBytes(s), length * 8);
     
-    [Obsolete("Try the ToPooledArray or GetBytes methods for lower allocation.")]
     public byte[] ToArray()
     {
         byte[] bytes = new byte[GetByteArrayLengthFromBitLength(Length)];

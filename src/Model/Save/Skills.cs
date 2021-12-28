@@ -85,7 +85,7 @@ public class Skill
 
     public void Write(IBitWriter writer) => writer.WriteUInt32(Id);
 
-    public static Skill Read(BitReader reader)
+    public static Skill Read(IBitReader reader)
     {
         var skill = new Skill
         {

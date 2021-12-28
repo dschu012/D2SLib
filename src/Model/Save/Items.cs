@@ -157,7 +157,6 @@ public class Item
         }
     }
 
-    [Obsolete("Try the direct-read overload!")]
     public static Item Read(ReadOnlySpan<byte> bytes, uint version)
     {
         using var reader = new BitReader(bytes);
@@ -184,7 +183,6 @@ public class Item
         return item;
     }
 
-    [Obsolete("Try the non-allocating overload!")]
     public static byte[] Write(Item item, uint version)
     {
         using var writer = new BitWriter();
@@ -375,7 +373,7 @@ public class Item
         {
             item.PlayerName = ReadPlayerName(reader);
         }
-        var trimmedCode = item.Code.AsSpan().Trim();
+        var trimmedCode = item.Code.AsSpan().TrimEnd();
         if (trimmedCode.SequenceEqual("tbk") || trimmedCode.SequenceEqual("ibk"))
         {
             item.MagicSuffixIds[0] = reader.ReadByte(5);

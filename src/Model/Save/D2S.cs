@@ -1,4 +1,5 @@
 ﻿using D2SLib.IO;
+using Microsoft.Toolkit.HighPerformance.Buffers;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 
@@ -6,6 +7,47 @@ namespace D2SLib.Model.Save;
 
 public class D2S
 {
+    private D2S(IBitReader reader)
+    {
+        Header = Header.Read(reader);
+        ActiveWeapon = reader.ReadUInt32();
+        Name = reader.ReadString(16);
+        Status = Status.Read(reader.ReadByte());
+        Progression = reader.ReadByte();
+        Unk0x0026 = reader.ReadBytes(2);
+        ClassId = reader.ReadByte();
+        Unk0x0029 = reader.ReadBytes(2);
+        Level = reader.ReadByte();
+        Created = reader.ReadUInt32();
+        LastPlayed = reader.ReadUInt32();
+        Unk0x0034 = reader.ReadBytes(4);
+        AssignedSkills = Enumerable.Range(0, 16).Select(_ => Skill.Read(reader)).ToArray();
+        LeftSkill = Skill.Read(reader);
+        RightSkill = Skill.Read(reader);
+        LeftSwapSkill = Skill.Read(reader);
+        RightSwapSkill = Skill.Read(reader);
+        Appearances = Appearances.Read(reader);
+        Location = Locations.Read(reader);
+        MapId = reader.ReadUInt32();
+        Unk0x00af = reader.ReadBytes(2);
+        Mercenary = Mercenary.Read(reader);
+        RealmData = reader.ReadBytes(140);
+        Quests = QuestsSection.Read(reader);
+        Waypoints = WaypointsSection.Read(reader);
+        NPCDialog = NPCDialogSection.Read(reader);
+        Attributes = Attributes.Read(reader);
+
+        ClassSkills = ClassSkills.Read(reader, ClassId);
+        PlayerItemList = ItemList.Read(reader, Header.Version);
+        PlayerCorpses = CorpseList.Read(reader, Header.Version);
+
+        if (Status.IsExpansion)
+        {
+            MercenaryItemList = MercenaryItemList.Read(reader, Mercenary, Header.Version);
+            Golem = Golem.Read(reader, Header.Version);
+        }
+    }
+
     //0x0000
     public Header Header { get; set; }
     //0x0010
@@ -71,100 +113,77 @@ public class D2S
 
     public ItemList PlayerItemList { get; set; }
     public CorpseList PlayerCorpses { get; set; }
-    public MercenaryItemList MercenaryItemList { get; set; }
-    public Golem Golem { get; set; }
+    public MercenaryItemList? MercenaryItemList { get; set; }
+    public Golem? Golem { get; set; }
+
+    public void Write(IBitWriter writer)
+    {
+        Header.Write(writer);
+        writer.WriteUInt32(ActiveWeapon);
+        writer.WriteString(Name, 16);
+        Status.Write(writer);
+        writer.WriteByte(Progression);
+        //Unk0x0026
+        writer.WriteBytes(Unk0x0026 ?? new byte[2]);
+        writer.WriteByte(ClassId);
+        //Unk0x0029
+        writer.WriteBytes(Unk0x0029 ?? stackalloc byte[] { 0x10, 0x1e });
+        writer.WriteByte(Level);
+        writer.WriteUInt32(Created);
+        writer.WriteUInt32(LastPlayed);
+        //Unk0x0034
+        writer.WriteBytes(Unk0x0034 ?? stackalloc byte[] { 0xff, 0xff, 0xff, 0xff });
+        for (int i = 0; i < 16; i++)
+        {
+            AssignedSkills[i].Write(writer);
+        }
+        LeftSkill.Write(writer);
+        RightSkill.Write(writer);
+        LeftSwapSkill.Write(writer);
+        RightSwapSkill.Write(writer);
+        Appearances.Write(writer);
+        Location.Write(writer);
+        writer.WriteUInt32(MapId);
+        //0x00af [unk = 0x0, 0x0]
+        writer.WriteBytes(Unk0x00af ?? new byte[2]);
+        Mercenary.Write(writer);
+        //0x00bf [unk = 0x0] (server related data)
+        writer.WriteBytes(RealmData ?? new byte[140]);
+        Quests.Write(writer);
+        Waypoints.Write(writer);
+        NPCDialog.Write(writer);
+        Attributes.Write(writer);
+        ClassSkills.Write(writer);
+        PlayerItemList.Write(writer, Header.Version);
+        PlayerCorpses.Write(writer, Header.Version);
+        if (Status.IsExpansion)
+        {
+            MercenaryItemList?.Write(writer, Mercenary, Header.Version);
+            Golem?.Write(writer, Header.Version);
+        }
+    }
 
     public static D2S Read(ReadOnlySpan<byte> bytes)
     {
         using var reader = new BitReader(bytes);
-        var d2s = new D2S
-        {
-            Header = Header.Read(reader),
-            ActiveWeapon = reader.ReadUInt32(),
-            Name = reader.ReadString(16),
-            Status = Status.Read(reader.ReadByte()),
-            Progression = reader.ReadByte(),
-            Unk0x0026 = reader.ReadBytes(2),
-            ClassId = reader.ReadByte(),
-            Unk0x0029 = reader.ReadBytes(2),
-            Level = reader.ReadByte(),
-            Created = reader.ReadUInt32(),
-            LastPlayed = reader.ReadUInt32(),
-            Unk0x0034 = reader.ReadBytes(4),
-            AssignedSkills = Enumerable.Range(0, 16).Select(_ => Skill.Read(reader)).ToArray(),
-            LeftSkill = Skill.Read(reader),
-            RightSkill = Skill.Read(reader),
-            LeftSwapSkill = Skill.Read(reader),
-            RightSwapSkill = Skill.Read(reader),
-            Appearances = Appearances.Read(reader),
-            Location = Locations.Read(reader),
-            MapId = reader.ReadUInt32(),
-            Unk0x00af = reader.ReadBytes(2),
-            Mercenary = Mercenary.Read(reader),
-            RealmData = reader.ReadBytes(140),
-            Quests = QuestsSection.Read(reader),
-            Waypoints = WaypointsSection.Read(reader),
-            NPCDialog = NPCDialogSection.Read(reader),
-            Attributes = Attributes.Read(reader)
-        };
-        d2s.ClassSkills = ClassSkills.Read(reader, d2s.ClassId);
-        d2s.PlayerItemList = ItemList.Read(reader, d2s.Header.Version);
-        d2s.PlayerCorpses = CorpseList.Read(reader, d2s.Header.Version);
-        if (d2s.Status.IsExpansion)
-        {
-            d2s.MercenaryItemList = MercenaryItemList.Read(reader, d2s.Mercenary, d2s.Header.Version);
-            d2s.Golem = Golem.Read(reader, d2s.Header.Version);
-        }
+        var d2s = new D2S(reader);
         Debug.Assert(reader.Position == (bytes.Length * 8));
         return d2s;
+    }
+
+    public static MemoryOwner<byte> WritePooled(D2S d2s)
+    {
+        using var writer = new BitWriter();
+        d2s.Write(writer);
+        var bytes = writer.ToPooledArray();
+        Header.Fix(bytes.Span);
+        return bytes;
     }
 
     public static byte[] Write(D2S d2s)
     {
         using var writer = new BitWriter();
-        d2s.Header.Write(writer);
-        writer.WriteUInt32(d2s.ActiveWeapon);
-        writer.WriteString(d2s.Name, 16);
-        d2s.Status.Write(writer);
-        writer.WriteByte(d2s.Progression);
-        //Unk0x0026
-        writer.WriteBytes(d2s.Unk0x0026 ?? new byte[2]);
-        writer.WriteByte(d2s.ClassId);
-        //Unk0x0029
-        writer.WriteBytes(d2s.Unk0x0029 ?? stackalloc byte[] { 0x10, 0x1e });
-        writer.WriteByte(d2s.Level);
-        writer.WriteUInt32(d2s.Created);
-        writer.WriteUInt32(d2s.LastPlayed);
-        //Unk0x0034
-        writer.WriteBytes(d2s.Unk0x0034 ?? stackalloc byte[] { 0xff, 0xff, 0xff, 0xff });
-        for (int i = 0; i < 16; i++)
-        {
-            d2s.AssignedSkills[i].Write(writer);
-        }
-        d2s.LeftSkill.Write(writer);
-        d2s.RightSkill.Write(writer);
-        d2s.LeftSwapSkill.Write(writer);
-        d2s.RightSwapSkill.Write(writer);
-        d2s.Appearances.Write(writer);
-        d2s.Location.Write(writer);
-        writer.WriteUInt32(d2s.MapId);
-        //0x00af [unk = 0x0, 0x0]
-        writer.WriteBytes(d2s.Unk0x00af ?? new byte[2]);
-        d2s.Mercenary.Write(writer);
-        //0x00bf [unk = 0x0] (server related data)
-        writer.WriteBytes(d2s.RealmData ?? new byte[140]);
-        d2s.Quests.Write(writer);
-        d2s.Waypoints.Write(writer);
-        d2s.NPCDialog.Write(writer);
-        d2s.Attributes.Write(writer);
-        d2s.ClassSkills.Write(writer);
-        d2s.PlayerItemList.Write(writer, d2s.Header.Version);
-        d2s.PlayerCorpses.Write(writer, d2s.Header.Version);
-        if (d2s.Status.IsExpansion)
-        {
-            d2s.MercenaryItemList.Write(writer, d2s.Mercenary, d2s.Header.Version);
-            d2s.Golem.Write(writer, d2s.Header.Version);
-        }
+        d2s.Write(writer);
         byte[] bytes = writer.ToArray();
         Header.Fix(bytes);
         return bytes;
