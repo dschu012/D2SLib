@@ -163,7 +163,7 @@ public class D2S
         if (d2s.Status.IsExpansion)
         {
             d2s.MercenaryItemList.Write(writer, d2s.Mercenary, d2s.Header.Version);
-            writer.WriteBytes(Golem.Write(d2s.Golem, d2s.Header.Version));
+            d2s.Golem.Write(writer, d2s.Header.Version);
         }
         byte[] bytes = writer.ToArray();
         Header.Fix(bytes);

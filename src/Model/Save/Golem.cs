@@ -1,40 +1,46 @@
 ﻿using D2SLib.IO;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+public class Golem
 {
-    public class Golem
+#nullable disable
+    private Golem() { }
+#nullable enable
+
+    public ushort? Header { get; set; }
+    public bool Exists { get; set; }
+    public Item Item { get; set; }
+
+    public void Write(IBitWriter writer, uint version)
     {
-        public UInt16? Header { get; set; }
-        public bool Exists { get; set; }
-        public Item Item { get; set; }
-
-        public static Golem Read(BitReader reader, UInt32 version)
+        writer.WriteUInt16(Header ?? 0x666B);
+        writer.WriteByte((byte)(Exists ? 1 : 0));
+        if (Exists)
         {
-            Golem golem = new Golem();
-            golem.Header = reader.ReadUInt16();
-            golem.Exists = reader.ReadByte() == 1;
-            if(golem.Exists)
-            {
-                golem.Item = Item.Read(reader, version);
-            }
-            return golem;
+            Item.Write(writer, version);
         }
+    }
 
-        public static byte[] Write(Golem golem, UInt32 version)
+    public static Golem Read(IBitReader reader, uint version)
+    {
+        var golem = new Golem
         {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt16(golem.Header ?? 0x666B);
-                writer.WriteByte((byte)(golem.Exists ? 1 : 0));
-                if(golem.Exists)
-                {
-                    writer.WriteBytes(Item.Write(golem.Item, version));
-                }
-                return writer.ToArray();
-            }
+            Header = reader.ReadUInt16(),
+            Exists = reader.ReadByte() == 1
+        };
+        if (golem.Exists)
+        {
+            golem.Item = Item.Read(reader, version);
         }
+        return golem;
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(Golem golem, uint version)
+    {
+        using var writer = new BitWriter();
+        golem.Write(writer, version);
+        return writer.ToArray();
     }
 }
