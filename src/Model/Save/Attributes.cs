@@ -10,7 +10,7 @@ public class Attributes
 
     public static Attributes Read(IBitReader reader)
     {
-        var itemStatCost = Core.TXT.ItemStatCostTXT;
+        var itemStatCost = Core.MetaData.ItemStatCostData;
         var attributes = new Attributes
         {
             Header = reader.ReadUInt16()
@@ -34,7 +34,7 @@ public class Attributes
 
     public void Write(IBitWriter writer)
     {
-        var itemStatCost = Core.TXT.ItemStatCostTXT;
+        var itemStatCost = Core.MetaData.ItemStatCostData;
         writer.WriteUInt16(Header ?? 0x6667);
         foreach (var entry in Stats)
         {

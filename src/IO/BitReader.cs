@@ -21,7 +21,6 @@ public sealed class BitReader : IBitReader, IDisposable
 
     public bool ReadBit() => _bits[Position++];
 
-    [Obsolete("Try a non-allocating overload!")]
     public byte[] ReadBits(int numberOfBits)
     {
         byte[] bytes = new byte[GetByteArrayLengthFromBitLength(numberOfBits)];
@@ -73,7 +72,6 @@ public sealed class BitReader : IBitReader, IDisposable
     public int ReadBytes(Span<byte> output)
         => ReadBits(output.Length * 8, output);
 
-    [Obsolete("Try a non-allocating overload!")]
     public byte[] ReadBytes(int numberOfBytes) 
         => ReadBits(numberOfBytes * 8);
 

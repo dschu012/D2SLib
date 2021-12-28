@@ -1,34 +1,34 @@
-﻿using D2SLib.Model.TXT;
+﻿using D2SLib.Model.Data;
 using System.Reflection;
 
 namespace D2SLib;
 
-public sealed class ResourceFilesTXT
+public sealed class ResourceFilesData
 {
-    private ResourceFilesTXT()
+    private ResourceFilesData()
     {
-        TXT = new TXT();
+        MetaData = new MetaData();
         using (Stream s = GetResource("ItemStatCost.txt"))
         {
-            TXT.ItemStatCostTXT = ItemStatCostTXT.Read(s);
+            MetaData.ItemStatCostData = ItemStatCostData.Read(s);
         }
         using (Stream s = GetResource("Armor.txt"))
         {
-            TXT.ItemsTXT.ArmorTXT = ArmorTXT.Read(s);
+            MetaData.ItemsData.ArmorData = ArmorData.Read(s);
         }
         using (Stream s = GetResource("Weapons.txt"))
         {
-            TXT.ItemsTXT.WeaponsTXT = WeaponsTXT.Read(s);
+            MetaData.ItemsData.WeaponsData = WeaponsData.Read(s);
         }
         using (Stream s = GetResource("Misc.txt"))
         {
-            TXT.ItemsTXT.MiscTXT = MiscTXT.Read(s);
+            MetaData.ItemsData.MiscData = MiscData.Read(s);
         }
     }
 
-    public static ResourceFilesTXT Instance { get; } = new();
+    public static ResourceFilesData Instance { get; } = new();
 
-    public TXT TXT { get; set; }
+    public MetaData MetaData { get; set; }
 
     private static Stream GetResource(string file)
     {
