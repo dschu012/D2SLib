@@ -1,4 +1,6 @@
-﻿namespace D2SLib.Model.Data;
+﻿using Microsoft.Toolkit.HighPerformance;
+
+namespace D2SLib.Model.Data;
 
 public abstract class DataFile
 {
@@ -39,7 +41,8 @@ public abstract class DataFile
         return null;
     }
 }
-public class DataRow
+
+public sealed class DataRow
 {
     public Dictionary<string, int> Columns { get; set; }
     public DataCell[] Data { get; set; }
@@ -58,7 +61,7 @@ public class DataRow
     public DataCell GetByColumn(string col) => GetByIndex(Columns[col]);
 }
 
-public class DataCell
+public sealed class DataCell
 {
     public string Value { get; set; }
 

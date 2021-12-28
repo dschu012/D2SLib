@@ -1,6 +1,6 @@
 ﻿namespace D2SLib.Model.Data;
 
-public class ItemStatCostData : DataFile
+public sealed class ItemStatCostData : DataFile
 {
     public DataRow this[int i] => GetByColumnAndValue("ID", i.ToString());
     public DataRow this[string i] => GetByColumnAndValue("Stat", i);

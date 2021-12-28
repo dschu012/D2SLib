@@ -3,7 +3,7 @@
 namespace D2SLib.Model.Data;
 
 //collections or ArmorData MiscData WeaponsData with helper methods
-public class ItemsData
+public sealed class ItemsData
 {
     public ArmorData ArmorData { get; set; }
     public WeaponsData WeaponsData { get; set; }
@@ -72,6 +72,7 @@ public sealed class ArmorData : DataFile
         armor.ReadData(data);
         return armor;
     }
+
     public static ArmorData Read(string file)
     {
         using Stream stream = File.OpenRead(file);

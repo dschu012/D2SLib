@@ -2,7 +2,7 @@
 
 namespace D2SLib;
 
-public class MetaData
+public sealed class MetaData
 {
     public ItemStatCostData ItemStatCostData { get; set; }
     private ItemsData? _items = null;
