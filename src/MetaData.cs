@@ -4,11 +4,12 @@ namespace D2SLib;
 
 public sealed class MetaData
 {
-    public ItemStatCostData ItemStatCostData { get; set; }
-    private ItemsData? _items = null;
-    public ItemsData ItemsData
+    public MetaData(ItemStatCostData itemsStatCost, ItemsData itemsData)
     {
-        get => _items ??= new ItemsData();
-        set => _items = value;
+        ItemStatCostData = itemsStatCost;
+        ItemsData = itemsData;
     }
+
+    public ItemStatCostData ItemStatCostData { get; }
+    public ItemsData ItemsData { get; }
 }

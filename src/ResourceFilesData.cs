@@ -7,23 +7,29 @@ public sealed class ResourceFilesData
 {
     private ResourceFilesData()
     {
-        MetaData = new MetaData();
+        ArmorData armorData;
+        WeaponsData weaponsData;
+        MiscData miscData;
+        ItemStatCostData itemStatCostData;
+
         using (Stream s = GetResource("ItemStatCost.txt"))
         {
-            MetaData.ItemStatCostData = ItemStatCostData.Read(s);
+            itemStatCostData = ItemStatCostData.Read(s);
         }
         using (Stream s = GetResource("Armor.txt"))
         {
-            MetaData.ItemsData.ArmorData = ArmorData.Read(s);
+            armorData = ArmorData.Read(s);
         }
         using (Stream s = GetResource("Weapons.txt"))
         {
-            MetaData.ItemsData.WeaponsData = WeaponsData.Read(s);
+            weaponsData = WeaponsData.Read(s);
         }
         using (Stream s = GetResource("Misc.txt"))
         {
-            MetaData.ItemsData.MiscData = MiscData.Read(s);
+            miscData = MiscData.Read(s);
         }
+
+        MetaData = new MetaData(itemStatCostData, new ItemsData(armorData, weaponsData, miscData));
     }
 
     public static ResourceFilesData Instance { get; } = new();

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Toolkit.HighPerformance;
+using Microsoft.Toolkit.HighPerformance.Buffers;
 
 namespace D2SLib.Model.Data;
 
@@ -16,26 +17,43 @@ public abstract class DataFile
 
         //skip header
         int idx = 0;
-        var columns = reader.ReadLine()?.Split('\t') ?? Array.Empty<string>();
-        foreach (var col in columns)
+        foreach (var col in reader.ReadLine()!.Tokenize('\t'))
         {
-            Columns.TryAdd(col, idx++);
+            Columns.TryAdd(StringPool.Shared.GetOrAdd(col), idx++);
         }
-        while (reader.Peek() >= 0)
+
+        string? line;
+        while ((line = reader.ReadLine()) is not null)
         {
-            Rows.Add(new DataRow(Columns, reader.ReadLine()?.Split('\t') ?? Array.Empty<string>()));
+            Rows.Add(new DataRow(Columns, line.AsSpan()));
         }
     }
 
     public DataRow? GetByColumnAndValue(string name, ReadOnlySpan<char> value)
     {
-        //Console.WriteLine(name);
-        //Console.WriteLine(value.ToString());
-        foreach (var row in Rows)
+        if (Columns.TryGetValue(name, out var colIdx))
         {
-            if (row[name].Value.AsSpan().Trim().Equals(value.Trim(), StringComparison.Ordinal))
+            foreach (var row in Rows)
             {
-                return row;
+                if (row[colIdx].Value.AsSpan().Trim().Equals(value.Trim(), StringComparison.Ordinal))
+                {
+                    return row;
+                }
+            }
+        }
+        return null;
+    }
+
+    public DataRow? GetByColumnAndValue(string name, int value)
+    {
+        if (Columns.TryGetValue(name, out var colIdx))
+        {
+            foreach (var row in Rows)
+            {
+                if (row[colIdx].ToInt32() == value)
+                {
+                    return row;
+                }
             }
         }
         return null;
@@ -44,55 +62,61 @@ public abstract class DataFile
 
 public sealed class DataRow
 {
-    public Dictionary<string, int> Columns { get; set; }
-    public DataCell[] Data { get; set; }
-
-    public DataCell this[int i] => GetByIndex(i);
-    public DataCell this[string i] => GetByColumn(i);
-
-    public DataRow(Dictionary<string, int> columns, string[] data)
+    public DataRow(IReadOnlyDictionary<string, int> columns, ReadOnlySpan<char> data)
     {
         Columns = columns;
-        Data = data.Select(e => new DataCell(e)).ToArray();
+        var cells = new List<DataCell>(columns.Count);
+        foreach (var value in data.Tokenize('\t'))
+        {
+            cells.Add(DataCell.Create(value));
+        }
+        Data = cells.ToArray();
     }
 
-    public DataCell GetByIndex(int idx) => Data[idx];
+    public IReadOnlyDictionary<string, int> Columns { get; }
+    public DataCell[] Data { get; }
 
-    public DataCell GetByColumn(string col) => GetByIndex(Columns[col]);
+    public DataCell this[int i] => Data[i];
+    public DataCell this[string colName] => Data[Columns[colName]];
 }
 
-public sealed class DataCell
+public abstract class DataCell
 {
-    public string Value { get; set; }
+    public abstract string Value { get; }
+    public abstract int ToInt32();
+    public abstract ushort ToUInt16();
+    public abstract bool ToBool();
 
-    public int ToInt32()
+    public static DataCell Create(ReadOnlySpan<char> value)
     {
-        int.TryParse(Value, out int ret);
-        return ret;
-    }
+        if (int.TryParse(value, out int intVal))
+        {
+            return new Int32DataCell(intVal);
+        }
 
-    public uint ToUInt32()
-    {
-        uint.TryParse(Value, out uint ret);
-        return ret;
-    }
-
-    public ushort ToUInt16()
-    {
-        ushort.TryParse(Value, out ushort ret);
-        return ret;
-    }
-
-    public short ToInt16()
-    {
-        short.TryParse(Value, out short ret);
-        return ret;
-    }
-
-    public bool ToBool() => ToInt32() != 0;
-
-    public DataCell(string value)
-    {
-        Value = value;
+        return new StringDataCell(value.IsEmpty ? string.Empty : StringPool.Shared.GetOrAdd(value));
     }
 }
+
+public sealed class StringDataCell : DataCell
+{
+    public StringDataCell(string value) => Value = value;
+
+    public override string Value { get; }
+
+    public override int ToInt32() => 0;
+    public override ushort ToUInt16() => 0;
+    public override bool ToBool() => false;
+}
+
+public sealed class Int32DataCell : DataCell
+{
+    private readonly int _value;
+    public Int32DataCell(int value) => _value = value;
+
+    public override string Value => _value.ToString();
+    public override int ToInt32() => _value;
+    public override ushort ToUInt16() => (ushort)_value;
+    public override bool ToBool() => _value != 0;
+}
+

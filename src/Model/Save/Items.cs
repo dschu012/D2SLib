@@ -392,16 +392,16 @@ public class Item
         if (isArmor)
         {
             //why do i need this cast?
-            item.Armor = (ushort)(reader.ReadUInt16(11) + itemStatCost["armorclass"]["Save Add"].ToUInt16());
+            item.Armor = (ushort)(reader.ReadUInt16(11) + itemStatCost["armorclass"]?["Save Add"].ToUInt16() ?? 0);
         }
         if (isArmor || isWeapon)
         {
             var maxDurabilityStat = itemStatCost["maxdurability"];
             var durabilityStat = itemStatCost["maxdurability"];
-            item.MaxDurability = (ushort)(reader.ReadUInt16(maxDurabilityStat["Save Bits"].ToInt32()) + maxDurabilityStat["Save Add"].ToUInt16());
+            item.MaxDurability = (ushort)(reader.ReadUInt16(maxDurabilityStat?["Save Bits"].ToInt32() ?? 0) + maxDurabilityStat?["Save Add"].ToUInt16() ?? 0);
             if (item.MaxDurability > 0)
             {
-                item.Durability = (ushort)(reader.ReadUInt16(durabilityStat["Save Bits"].ToInt32()) + durabilityStat["Save Add"].ToUInt16());
+                item.Durability = (ushort)(reader.ReadUInt16(durabilityStat?["Save Bits"].ToInt32() ?? 0) + durabilityStat?["Save Add"].ToUInt16() ?? 0);
                 //what is this?
                 reader.ReadBit();
             }
@@ -510,16 +510,16 @@ public class Item
         bool isStackable = row?["stackable"].ToBool() ?? false;
         if (isArmor)
         {
-            writer.WriteUInt16((ushort)(item.Armor - itemStatCost["armorclass"]["Save Add"].ToUInt16()), 11);
+            writer.WriteUInt16((ushort)(item.Armor - itemStatCost["armorclass"]?["Save Add"].ToUInt16() ?? 0), 11);
         }
         if (isArmor || isWeapon)
         {
             var maxDurabilityStat = itemStatCost["maxdurability"];
             var durabilityStat = itemStatCost["maxdurability"];
-            writer.WriteUInt16((ushort)(item.MaxDurability - maxDurabilityStat["Save Add"].ToUInt16()), maxDurabilityStat["Save Bits"].ToInt32());
+            writer.WriteUInt16((ushort)(item.MaxDurability - maxDurabilityStat?["Save Add"].ToUInt16() ?? 0), maxDurabilityStat?["Save Bits"].ToInt32() ?? 0);
             if (item.MaxDurability > 0)
             {
-                writer.WriteUInt16((ushort)(item.Durability - durabilityStat["Save Add"].ToUInt16()), durabilityStat["Save Bits"].ToInt32());
+                writer.WriteUInt16((ushort)(item.Durability - durabilityStat?["Save Add"].ToUInt16() ?? 0), durabilityStat?["Save Bits"].ToInt32() ?? 0);
                 ////what is this?
                 writer.WriteBit(false);
             }
@@ -588,7 +588,7 @@ public class ItemStatList
         {
             var stat = itemStatList.Stats[i];
             var property = ItemStat.GetStatRow(stat);
-            ushort id = property["ID"].ToUInt16();
+            ushort id = property?["ID"].ToUInt16() ?? 0;
             writer.WriteUInt16(id, 9);
             ItemStat.Write(writer, stat);
 
@@ -677,9 +677,9 @@ public class ItemStat
     public static void Write(IBitWriter writer, ItemStat stat)
     {
         var property = GetStatRow(stat);
-        if (property == null)
+        if (property is null)
         {
-            throw new Exception($"No ItemStatCost record found for id: {stat.Id}");
+            throw new ArgumentException($"No ItemStatCost record found for id: {stat.Id}", nameof(stat));
         }
         int saveParamBitCount = property["Save Param Bits"].ToInt32();
         int encode = property["Encode"].ToInt32();
@@ -734,7 +734,8 @@ public class ItemStat
         }
         writer.WriteInt32(saveBits, property["Save Bits"].ToInt32());
     }
-    public static DataRow GetStatRow(ItemStat stat)
+
+    public static DataRow? GetStatRow(ItemStat stat)
     {
         if (stat.Id != null)
         {

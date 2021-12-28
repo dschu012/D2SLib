@@ -5,38 +5,38 @@ namespace D2SLib.Model.Data;
 //collections or ArmorData MiscData WeaponsData with helper methods
 public sealed class ItemsData
 {
-    public ArmorData ArmorData { get; set; }
-    public WeaponsData WeaponsData { get; set; }
-    public MiscData MiscData { get; set; }
-
-    private HuffmanTree? _ItemCodeTree = null;
-    public HuffmanTree ItemCodeTree
+    public ItemsData(ArmorData armorData, WeaponsData weaponsData, MiscData miscData)
     {
-        get
-        {
-            if (_ItemCodeTree == null)
-            {
-                _ItemCodeTree = InitializeHuffmanTree();
-            }
-            return _ItemCodeTree;
-        }
-        set => _ItemCodeTree = value;
+        ArmorData = armorData;
+        WeaponsData = weaponsData;
+        MiscData = miscData;
     }
 
-    public DataRow? this[string i] => GetByCode(i);
+    public ArmorData ArmorData { get; }
+    public WeaponsData WeaponsData { get; }
+    public MiscData MiscData { get; }
+
+    private HuffmanTree? _itemCodeTree = null;
+    public HuffmanTree ItemCodeTree
+    {
+        get => _itemCodeTree ??= InitializeHuffmanTree();
+        set => _itemCodeTree = value;
+    }
+
+    public DataRow? this[string code] => GetByCode(code);
 
     public DataRow? GetByCode(string code)
     {
-        return ArmorData[code] ??
-            WeaponsData[code] ??
-            MiscData[code];
+        return ArmorData[code]
+            ?? WeaponsData[code] 
+            ?? MiscData[code];
     }
 
-    public bool IsArmor(string code) => ArmorData[code] != null;
+    public bool IsArmor(string code) => ArmorData[code] is not null;
 
-    public bool IsWeapon(string code) => WeaponsData[code] != null;
+    public bool IsWeapon(string code) => WeaponsData[code] is not null;
 
-    public bool IsMisc(string code) => MiscData[code] != null;
+    public bool IsMisc(string code) => MiscData[code] is not null;
 
     private HuffmanTree InitializeHuffmanTree()
     {
@@ -59,12 +59,11 @@ public sealed class ItemsData
         itemCodeTree.Build(new List<string>());
         return itemCodeTree;
     }
-
 }
 
 public sealed class ArmorData : DataFile
 {
-    public DataRow? this[string i] => GetByColumnAndValue("code", i);
+    public DataRow? this[string code] => GetByColumnAndValue("code", code);
 
     public static ArmorData Read(Stream data)
     {
@@ -82,7 +81,7 @@ public sealed class ArmorData : DataFile
 
 public sealed class WeaponsData : DataFile
 {
-    public DataRow? this[string i] => GetByColumnAndValue("code", i);
+    public DataRow? this[string code] => GetByColumnAndValue("code", code);
 
     public static WeaponsData Read(Stream data)
     {
@@ -90,6 +89,7 @@ public sealed class WeaponsData : DataFile
         weapons.ReadData(data);
         return weapons;
     }
+
     public static WeaponsData Read(string file)
     {
         using Stream stream = File.OpenRead(file);
@@ -99,7 +99,7 @@ public sealed class WeaponsData : DataFile
 
 public sealed class MiscData : DataFile
 {
-    public DataRow? this[string i] => GetByColumnAndValue("code", i);
+    public DataRow? this[string code] => GetByColumnAndValue("code", code);
 
     public static MiscData Read(Stream data)
     {
@@ -107,6 +107,7 @@ public sealed class MiscData : DataFile
         misc.ReadData(data);
         return misc;
     }
+
     public static MiscData Read(string file)
     {
         using Stream stream = File.OpenRead(file);

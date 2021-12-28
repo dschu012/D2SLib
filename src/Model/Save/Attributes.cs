@@ -6,7 +6,7 @@ namespace D2SLib.Model.Save;
 public class Attributes
 {
     public ushort? Header { get; set; }
-    public Dictionary<string, int> Stats { get; set; } = new Dictionary<string, int>();
+    public Dictionary<string, int> Stats { get; } = new Dictionary<string, int>();
 
     public static Attributes Read(IBitReader reader)
     {
@@ -19,13 +19,13 @@ public class Attributes
         while (id != 0x1ff)
         {
             var property = itemStatCost[id];
-            int attribute = reader.ReadInt32(property["CSvBits"].ToInt32());
-            int valShift = property["ValShift"].ToInt32();
+            int attribute = reader.ReadInt32(property?["CSvBits"].ToInt32() ?? 0);
+            int valShift = property?["ValShift"].ToInt32() ?? 0;
             if (valShift > 0)
             {
                 attribute >>= valShift;
             }
-            attributes.Stats.Add(property["Stat"].Value, attribute);
+            attributes.Stats.Add(property?["Stat"].Value ?? string.Empty, attribute);
             id = reader.ReadUInt16(9);
         }
         reader.Align();
@@ -39,14 +39,14 @@ public class Attributes
         foreach (var entry in Stats)
         {
             var property = itemStatCost[entry.Key];
-            writer.WriteUInt16(property["ID"].ToUInt16(), 9);
+            writer.WriteUInt16(property?["ID"].ToUInt16() ?? 0, 9);
             int attribute = entry.Value;
-            int valShift = property["ValShift"].ToInt32();
+            int valShift = property?["ValShift"].ToInt32() ?? 0;
             if (valShift > 0)
             {
                 attribute <<= valShift;
             }
-            writer.WriteInt32(attribute, property["CSvBits"].ToInt32());
+            writer.WriteInt32(attribute, property?["CSvBits"].ToInt32() ?? 0);
         }
         writer.WriteUInt16(0x1ff, 9);
         writer.Align();
