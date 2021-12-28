@@ -8,7 +8,7 @@ public class Attributes
     public ushort? Header { get; set; }
     public Dictionary<string, int> Stats { get; set; } = new Dictionary<string, int>();
 
-    public static Attributes Read(BitReader reader)
+    public static Attributes Read(IBitReader reader)
     {
         var itemStatCost = Core.TXT.ItemStatCostTXT;
         var attributes = new Attributes
@@ -32,7 +32,7 @@ public class Attributes
         return attributes;
     }
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         var itemStatCost = Core.TXT.ItemStatCostTXT;
         writer.WriteUInt16(Header ?? 0x6667);

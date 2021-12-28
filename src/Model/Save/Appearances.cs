@@ -24,7 +24,7 @@ public class Appearances
     public Appearance Special7 { get => _parts[14]; set => _parts[14] = value; }
     public Appearance Special8 { get => _parts[15]; set => _parts[15] = value; }
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         for (int i = 0; i < _parts.Length; i++)
         {
@@ -32,7 +32,7 @@ public class Appearances
         }
     }
 
-    public static Appearances Read(BitReader reader)
+    public static Appearances Read(IBitReader reader)
     {
         var appearances = new Appearances();
         var parts = appearances._parts;
@@ -70,7 +70,7 @@ public readonly struct Appearance : IEquatable<Appearance>
         Tint = tint;
     }
 
-    public Appearance(BitReader reader)
+    public Appearance(IBitReader reader)
     {
         Graphic = reader.ReadByte();
         Tint = reader.ReadByte();
@@ -79,7 +79,7 @@ public readonly struct Appearance : IEquatable<Appearance>
     public readonly byte Graphic { get; }
     public readonly byte Tint { get; }
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         writer.WriteByte(Graphic);
         writer.WriteByte(Tint);

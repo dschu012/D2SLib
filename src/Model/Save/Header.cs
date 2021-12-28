@@ -14,7 +14,7 @@ public class Header
     //0x000c
     public uint Checksum { get; set; }
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         writer.WriteUInt32(Magic ?? 0xAA55AA55);
         writer.WriteUInt32(Version);
@@ -22,7 +22,7 @@ public class Header
         writer.WriteUInt32(Checksum);
     }
 
-    public static Header Read(BitReader reader)
+    public static Header Read(IBitReader reader)
     {
         var header = new Header
         {

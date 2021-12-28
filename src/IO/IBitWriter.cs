@@ -17,6 +17,8 @@ public interface IBitWriter
     IMemoryOwner<byte> ToPooledArray();
     int GetBytes(Span<byte> output);
     void WriteBit(bool value);
+    void WriteBits(IList<bool> bits);
+    void WriteBits(IList<bool> bits, int numberOfBits);
     void WriteByte(byte value);
     void WriteByte(byte value, int size);
     void WriteBytes(ReadOnlySpan<byte> value);

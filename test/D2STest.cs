@@ -37,7 +37,10 @@ namespace D2SLibTests
             D2S character = Core.ReadD2S(input);
             byte[] ret = Core.WriteD2S(character);
             //File.WriteAllBytes(Environment.ExpandEnvironmentVariables($"%userprofile%/Saved Games/Diablo II Resurrected Tech Alpha/{character.Name}.d2s"), ret);
-            Assert.IsTrue(input.Length == ret.Length);
+            Assert.AreEqual(input.Length, ret.Length);
+            
+            // This test fails with "element at index 12 differs" but that was true in original code
+            //CollectionAssert.AreEqual(input, ret);
         }
 
     }

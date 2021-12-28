@@ -1,241 +1,355 @@
 ﻿using D2SLib.IO;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+public sealed class QuestsSection
 {
-    public class QuestsSection
+    private readonly QuestsDifficulty[] _difficulties = new QuestsDifficulty[3];
+
+    //0x014b [unk = 0x1, 0x0, 0x0, 0x0]
+    public uint? Magic { get; set; }
+    //0x014f [quests header identifier = 0x57, 0x6f, 0x6f, 0x21 "Woo!"]
+    public uint? Header { get; set; }
+    //0x0153 [version = 0x6, 0x0, 0x0, 0x0]
+    public uint? Version { get; set; }
+    //0x0153 [quests header length = 0x2a, 0x1]
+    public ushort? Length { get; set; }
+
+    public QuestsDifficulty Normal => _difficulties[0];
+    public QuestsDifficulty Nightmare => _difficulties[1];
+    public QuestsDifficulty Hell => _difficulties[2];
+
+    public void Write(IBitWriter writer)
     {
-        //0x014b [unk = 0x1, 0x0, 0x0, 0x0]
-        public UInt32? Magic { get; set; }
-        //0x014f [quests header identifier = 0x57, 0x6f, 0x6f, 0x21 "Woo!"]
-        public UInt32? Header { get; set; }
-        //0x0153 [version = 0x6, 0x0, 0x0, 0x0]
-        public UInt32? Version { get; set; }
-        //0x0153 [quests header length = 0x2a, 0x1]
-        public UInt16? Length { get; set; }
+        writer.WriteUInt32(Magic ?? 0x1);
+        writer.WriteUInt32(Header ?? 0x216F6F57);
+        writer.WriteUInt32(Version ?? 0x6);
+        writer.WriteUInt16(Length ?? 0x12A);
 
-        public QuestsDifficulty Normal { get; set; }
-        public QuestsDifficulty Nightmare { get; set; }
-        public QuestsDifficulty Hell { get; set; }
-
-        public static QuestsSection Read(byte[] bytes)
+        for (int i = 0; i < _difficulties.Length; i++)
         {
-            QuestsSection questSection = new QuestsSection();
-            using (BitReader reader = new BitReader(bytes))
-            {
-                questSection.Magic = reader.ReadUInt32();
-                questSection.Header = reader.ReadUInt32();
-                questSection.Version = reader.ReadUInt32();
-                questSection.Length = reader.ReadUInt16();
-                var skippedProperties = new string[]{ "Magic", "Header", "Version", "Length" };
-                foreach (var property in typeof(QuestsSection).GetProperties())
-                {
-                    if (skippedProperties.Contains(property.Name)) continue;
-                    property.SetValue(questSection, QuestsDifficulty.Read(reader.ReadBytes(96)));
-                }
-                return questSection;
-            }
-        }
-
-        public static byte[] Write(QuestsSection questSection)
-        {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt32(questSection.Magic ?? 0x1);
-                writer.WriteUInt32(questSection.Header ?? 0x216F6F57);
-                writer.WriteUInt32(questSection.Version ?? 0x6);
-                writer.WriteUInt16(questSection.Length ?? (UInt16)0x12A);
-                var skippedProperties = new string[] { "Magic", "Header", "Version", "Length" };
-                foreach (var property in typeof(QuestsSection).GetProperties())
-                {
-                    if (skippedProperties.Contains(property.Name)) continue;
-                    QuestsDifficulty questsDifficulty = (QuestsDifficulty)property.GetValue(questSection);
-                    writer.WriteBytes(QuestsDifficulty.Write(questsDifficulty));
-                }
-                return writer.ToArray();
-            }
+            _difficulties[i].Write(writer);
         }
     }
 
-    public class QuestsDifficulty
+    public static QuestsSection Read(IBitReader reader)
     {
-        public ActIQuests ActI { get; set; }
-        public ActIIQuests ActII { get; set; }
-        public ActIIIQuests ActIII { get; set; }
-        public ActIVQuests ActIV { get; set; }
-        public ActVQuests ActV { get; set; }
-
-        public static QuestsDifficulty Read(byte[] bytes)
+        var questSection = new QuestsSection
         {
-            QuestsDifficulty questsDifficulty = new QuestsDifficulty();
-            using (BitReader reader = new BitReader(bytes))
-            {
-                Type questsDifficultyType = typeof(QuestsDifficulty);
-                foreach (var questsDifficultyProperty in questsDifficultyType.GetProperties())
-                {
-                    Type type = questsDifficultyProperty.PropertyType;
-                    var quests = Activator.CreateInstance(type);
-                    foreach (var property in type.GetProperties())
-                    {
-                        Quest quest = new Quest();
-                        property.SetValue(quests, Quest.Read(reader.ReadBytes(2)));
-                    }
-                    questsDifficultyProperty.SetValue(questsDifficulty, quests);
-                }
-                return questsDifficulty;
-            }
+            Magic = reader.ReadUInt32(),
+            Header = reader.ReadUInt32(),
+            Version = reader.ReadUInt32(),
+            Length = reader.ReadUInt16()
+        };
+
+        for (int i = 0; i < questSection._difficulties.Length; i++)
+        {
+            questSection._difficulties[i] = QuestsDifficulty.Read(reader);
         }
 
-        public static byte[] Write(QuestsDifficulty questsDifficulty)
+        return questSection;
+    }
+
+    [Obsolete("Try the direct-read overload!")]
+    public static QuestsSection Read(byte[] bytes)
+    {
+        using var reader = new BitReader(bytes);
+        return Read(reader);
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(QuestsSection questSection)
+    {
+        using var writer = new BitWriter();
+        questSection.Write(writer);
+        return writer.ToArray();
+    }
+}
+
+public sealed class QuestsDifficulty
+{
+#nullable disable
+    private QuestsDifficulty() { }
+#nullable enable
+
+    public ActIQuests ActI { get; set; }
+    public ActIIQuests ActII { get; set; }
+    public ActIIIQuests ActIII { get; set; }
+    public ActIVQuests ActIV { get; set; }
+    public ActVQuests ActV { get; set; }
+
+    public void Write(IBitWriter writer)
+    {
+        ActI.Write(writer);
+        ActII.Write(writer);
+        ActIII.Write(writer);
+        ActIV.Write(writer);
+        ActV.Write(writer);
+    }
+
+    public static QuestsDifficulty Read(IBitReader reader)
+    {
+        var qd = new QuestsDifficulty
         {
-            using (BitWriter writer = new BitWriter())
-            {
-                Type questsDifficultyType = typeof(QuestsDifficulty);
-                foreach (var questsDifficultyProperty in questsDifficultyType.GetProperties())
-                {
-                    Type type = questsDifficultyProperty.PropertyType;
-                    var quests = questsDifficultyProperty.GetValue(questsDifficulty);
-                    foreach (var property in type.GetProperties())
-                    {
-                        Quest quest = (Quest)property.GetValue(quests);
-                        writer.WriteBytes(Quest.Write(quest));
-                    }
-                }
-                Debug.Assert(writer.Position == 96 * 8);
-                return writer.ToArray();
-            }
-        }
+            ActI = ActIQuests.Read(reader),
+            ActII = ActIIQuests.Read(reader),
+            ActIII = ActIIIQuests.Read(reader),
+            ActIV = ActIVQuests.Read(reader),
+            ActV = ActVQuests.Read(reader)
+        };
 
+        return qd;
     }
 
-  
-    public class Quest
+    [Obsolete("Try the direct-read overload!")]
+    public static QuestsDifficulty Read(ReadOnlySpan<byte> bytes)
     {
-        public bool RewardGranted { get; set; }
-        public bool RewardPending { get; set; }
-        public bool Started { get; set; }
-        public bool LeftTown { get; set; }
-        public bool EnterArea { get; set; }
-        public bool Custom1 { get; set; }
-        public bool Custom2 { get; set; }
-        public bool Custom3 { get; set; }
-        public bool Custom4 { get; set; }
-        public bool Custom5 { get; set; }
-        public bool Custom6 { get; set; }
-        public bool Custom7 { get; set; }
-        public bool QuestLog { get; set; }
-        public bool PrimaryGoalAchieved { get; set; }
-        public bool CompletedNow { get; set; }
-        public bool CompletedBefore { get; set; }
+        using var reader = new BitReader(bytes);
+        return Read(reader);
+    }
 
-        public static Quest Read(byte[] bytes)
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(QuestsDifficulty questsDifficulty)
+    {
+        using var writer = new BitWriter();
+        questsDifficulty.Write(writer);
+        Debug.Assert(writer.Position == 96 * 8);
+        return writer.ToArray();
+    }
+}
+
+
+public sealed class Quest
+{
+    private readonly InternalBitArray _flags;
+
+    private Quest(InternalBitArray flags) => _flags = flags;
+
+    public bool RewardGranted { get => _flags[0]; set => _flags[0] = value; }
+    public bool RewardPending { get => _flags[1]; set => _flags[1] = value; }
+    public bool Started { get => _flags[2]; set => _flags[2] = value; }
+    public bool LeftTown { get => _flags[3]; set => _flags[3] = value; }
+    public bool EnterArea { get => _flags[4]; set => _flags[4] = value; }
+    public bool Custom1 { get => _flags[5]; set => _flags[5] = value; }
+    public bool Custom2 { get => _flags[6]; set => _flags[6] = value; }
+    public bool Custom3 { get => _flags[7]; set => _flags[7] = value; }
+    public bool Custom4 { get => _flags[8]; set => _flags[8] = value; }
+    public bool Custom5 { get => _flags[9]; set => _flags[9] = value; }
+    public bool Custom6 { get => _flags[10]; set => _flags[10] = value; }
+    public bool Custom7 { get => _flags[11]; set => _flags[11] = value; }
+    public bool QuestLog { get => _flags[12]; set => _flags[12] = value; }
+    public bool PrimaryGoalAchieved { get => _flags[13]; set => _flags[13] = value; }
+    public bool CompletedNow { get => _flags[14]; set => _flags[14] = value; }
+    public bool CompletedBefore { get => _flags[15]; set => _flags[15] = value; }
+
+    public void Write(IBitWriter writer)
+    {
+        ushort flags = 0x0;
+        ushort i = 1;
+        foreach (var flag in _flags)
         {
-            BitArray bits = new BitArray(bytes);
-            Quest quest = new Quest();
-            int i = 0;
-            foreach (var questProperty in typeof(Quest).GetProperties())
+            if (flag)
             {
-                questProperty.SetValue(quest, bits[i++]);
+                flags |= i;
             }
-            return quest;
+            i <<= 1;
         }
+        writer.WriteUInt16(flags);
+    }
 
-        public static byte[] Write(Quest quest)
+    public static Quest Read(IBitReader reader)
+    {
+        Span<byte> bytes = stackalloc byte[2];
+        reader.ReadBytes(bytes);
+        var bits = new InternalBitArray(bytes);
+        return new Quest(bits);
+    }
+
+    [Obsolete("Try the direct-read overload!")]
+    public static Quest Read(ReadOnlySpan<byte> bytes)
+    {
+        var bits = new InternalBitArray(bytes);
+        return new Quest(bits);
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(Quest quest)
+    {
+        using var writer = new BitWriter();
+        quest.Write(writer);
+        return writer.ToArray();
+    }
+}
+
+public sealed class ActIQuests
+{
+    private readonly Quest[] _quests = new Quest[8];
+
+    public Quest Introduction => _quests[0];
+    public Quest DenOfEvil => _quests[1];
+    public Quest SistersBurialGrounds => _quests[2];
+    public Quest ToolsOfTheTrade => _quests[3];
+    public Quest TheSearchForCain => _quests[4];
+    public Quest TheForgottenTower => _quests[5];
+    public Quest SistersToTheSlaughter => _quests[6];
+    public Quest Completion => _quests[7];
+
+    public void Write(IBitWriter writer)
+    {
+        for (int i = 0; i < _quests.Length; i++)
         {
-            using (BitWriter writer = new BitWriter())
-            {
-                UInt16 flags = 0x0;
-                UInt16 i = 1;
-                foreach (var questProperty in typeof(Quest).GetProperties())
-                {
-                    if((bool)questProperty.GetValue(quest))
-                    {
-                        flags |= i;
-                    }
-                    i <<= 1;
-                }
-                writer.WriteUInt16(flags);
-                return writer.ToArray();
-            }
+            _quests[i].Write(writer);
         }
     }
 
-    public class ActIQuests
+    public static ActIQuests Read(IBitReader reader)
     {
-        public Quest Introduction { get; set; }
-        public Quest DenOfEvil { get; set; }
-        public Quest SistersBurialGrounds { get; set; }
-        public Quest ToolsOfTheTrade { get; set; }
-        public Quest TheSearchForCain { get; set; }
-        public Quest TheForgottenTower { get; set; }
-        public Quest SistersToTheSlaughter { get; set; }
-        public Quest Completion { get; set; }
+        var quests = new ActIQuests();
+        for (int i = 0; i < quests._quests.Length; i++)
+        {
+            quests._quests[i] = Quest.Read(reader);
+        }
+        return quests;
+    }
+}
+
+public sealed class ActIIQuests
+{
+    private readonly Quest[] _quests = new Quest[8];
+
+    public Quest Introduction => _quests[0];
+    public Quest RadamentsLair => _quests[1];
+    public Quest TheHoradricStaff => _quests[2];
+    public Quest TaintedSun => _quests[3];
+    public Quest ArcaneSanctuary => _quests[4];
+    public Quest TheSummoner => _quests[5];
+    public Quest TheSevenTombs => _quests[6];
+    public Quest Completion => _quests[7];
+
+    public void Write(IBitWriter writer)
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            _quests[i].Write(writer);
+        }
     }
 
-    public class ActIIQuests
+    public static ActIIQuests Read(IBitReader reader)
     {
-        public Quest Introduction { get; set; }
-        public Quest RadamentsLair { get; set; }
-        public Quest TheHoradricStaff { get; set; }
-        public Quest TaintedSun { get; set; }
-        public Quest ArcaneSanctuary { get; set; }
-        public Quest TheSummoner { get; set; }
-        public Quest TheSevenTombs { get; set; }
-        public Quest Completion { get; set; }
+        var quests = new ActIIQuests();
+        for (int i = 0; i < quests._quests.Length; i++)
+        {
+            quests._quests[i] = Quest.Read(reader);
+        }
+        return quests;
+    }
+}
+
+public sealed class ActIIIQuests
+{
+    private readonly Quest[] _quests = new Quest[8];
+
+    public Quest Introduction => _quests[0];
+    public Quest LamEsensTome => _quests[1];
+    public Quest KhalimsWill => _quests[2];
+    public Quest BladeOfTheOldReligion => _quests[3];
+    public Quest TheGoldenBird => _quests[4];
+    public Quest TheBlackenedTemple => _quests[5];
+    public Quest TheGuardian => _quests[6];
+    public Quest Completion => _quests[7];
+
+    public void Write(IBitWriter writer)
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            _quests[i].Write(writer);
+        }
     }
 
-    public class ActIIIQuests
+    public static ActIIIQuests Read(IBitReader reader)
     {
-        public Quest Introduction { get; set; }
-        public Quest LamEsensTome { get; set; }
-        public Quest KhalimsWill { get; set; }
-        public Quest BladeOfTheOldReligion { get; set; }
-        public Quest TheGoldenBird { get; set; }
-        public Quest TheBlackenedTemple { get; set; }
-        public Quest TheGuardian { get; set; }
-        public Quest Completion { get; set; }
+        var quests = new ActIIIQuests();
+        for (int i = 0; i < quests._quests.Length; i++)
+        {
+            quests._quests[i] = Quest.Read(reader);
+        }
+        return quests;
+    }
+}
+
+public sealed class ActIVQuests
+{
+    private readonly Quest[] _quests = new Quest[8];
+
+    public Quest Introduction => _quests[0];
+    public Quest TheFallenAngel => _quests[1];
+    public Quest TerrorsEnd => _quests[2];
+    public Quest Hellforge => _quests[3];
+    public Quest Completion => _quests[4];
+
+    //3 shorts at the end of ActIV completion. presumably for extra quests never used.
+    public Quest Extra1 => _quests[5];
+    public Quest Extra2 => _quests[6];
+    public Quest Extra3 => _quests[7];
+
+    public void Write(IBitWriter writer)
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            _quests[i].Write(writer);
+        }
     }
 
-    public class ActIVQuests
+    public static ActIVQuests Read(IBitReader reader)
     {
-        public Quest Introduction { get; set; }
-        public Quest TheFallenAngel { get; set; }
-        public Quest TerrorsEnd { get; set; }
-        public Quest Hellforge { get; set; }
-        public Quest Completion { get; set; }
+        var quests = new ActIVQuests();
+        for (int i = 0; i < quests._quests.Length; i++)
+        {
+            quests._quests[i] = Quest.Read(reader);
+        }
+        return quests;
+    }
+}
 
-        //3 shorts at the end of ActIV completion. presumably for extra quests never used.
-        public Quest Extra1 { get; set; }
-        public Quest Extra2 { get; set; }
-        public Quest Extra3 { get; set; }
+public sealed class ActVQuests
+{
+    private readonly Quest[] _quests = new Quest[16];
+
+    public Quest Introduction => _quests[0];
+    //2 shorts after ActV introduction. presumably for extra quests never used.
+    public Quest Extra1 => _quests[1];
+    public Quest Extra2 => _quests[2];
+    public Quest SiegeOnHarrogath => _quests[3];
+    public Quest RescueOnMountArreat => _quests[4];
+    public Quest PrisonOfIce => _quests[5];
+    public Quest BetrayalOfHarrogath => _quests[6];
+    public Quest RiteOfPassage => _quests[7];
+    public Quest EveOfDestruction => _quests[8];
+    public Quest Completion => _quests[9];
+    //6 shorts after ActV completion. presumably for extra quests never used.
+    public Quest Extra3 => _quests[10];
+    public Quest Extra4 => _quests[11];
+    public Quest Extra5 => _quests[12];
+    public Quest Extra6 => _quests[13];
+    public Quest Extra7 => _quests[14];
+    public Quest Extra8 => _quests[15];
+
+    public void Write(IBitWriter writer)
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            _quests[i].Write(writer);
+        }
     }
 
-    public class ActVQuests
+    public static ActVQuests Read(IBitReader reader)
     {
-        public Quest Introduction { get; set; }
-        //2 shorts after ActV introduction. presumably for extra quests never used.
-        public Quest Extra1 { get; set; }
-        public Quest Extra2 { get; set; }
-        public Quest SiegeOnHarrogath { get; set; }
-        public Quest RescueOnMountArreat { get; set; }
-        public Quest PrisonOfIce { get; set; }
-        public Quest BetrayalOfHarrogath { get; set; }
-        public Quest RiteOfPassage { get; set; }
-        public Quest EveOfDestruction { get; set; }
-        public Quest Completion { get; set; }
-        //6 shorts after ActV completion. presumably for extra quests never used.
-        public Quest Extra3 { get; set; }
-        public Quest Extra4 { get; set; }
-        public Quest Extra5 { get; set; }
-        public Quest Extra6 { get; set; }
-        public Quest Extra7 { get; set; }
-        public Quest Extra8 { get; set; }
+        var quests = new ActVQuests();
+        for (int i = 0; i < quests._quests.Length; i++)
+        {
+            quests._quests[i] = Quest.Read(reader);
+        }
+        return quests;
     }
 }

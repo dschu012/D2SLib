@@ -11,7 +11,7 @@ public class Locations
     public Location Nightmare { get => _locations[1]; set => _locations[1] = value; }
     public Location Hell { get => _locations[2]; set => _locations[2] = value; }
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         for (int i = 0; i < _locations.Length; i++)
         {
@@ -19,7 +19,7 @@ public class Locations
         }
     }
 
-    public static Locations Read(BitReader reader)
+    public static Locations Read(IBitReader reader)
     {
         var locations = new Locations();
         var places = locations._locations;
@@ -57,7 +57,7 @@ public readonly struct Location : IEquatable<Location>
     public readonly bool Active { get; }
     public readonly byte Act { get; }
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         byte b = 0x0;
         if (Active)
@@ -70,7 +70,7 @@ public readonly struct Location : IEquatable<Location>
         writer.WriteByte(b);
     }
 
-    public static Location Read(BitReader reader)
+    public static Location Read(IBitReader reader)
     {
         byte b = reader.ReadByte();
         return new Location(

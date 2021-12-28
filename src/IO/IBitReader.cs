@@ -16,6 +16,7 @@ public interface IBitReader
     byte[] ReadBytes(int numberOfBytes);
     IMemoryOwner<byte> ReadBytesPooled(int numberOfBytes);
     int ReadBytes(int numberOfBytes, Span<byte> output);
+    int ReadBytes(Span<byte> output);
     int ReadInt32();
     int ReadInt32(int bits);
     string ReadString(int byteCount);
@@ -25,4 +26,5 @@ public interface IBitReader
     uint ReadUInt32(int bits);
     void Seek(int bytePostion);
     void SeekBits(int bitPosition);
+    void AdvanceBits(int bits);
 }

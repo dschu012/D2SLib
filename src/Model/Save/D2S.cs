@@ -67,7 +67,6 @@ public class D2S
     //0x2fc
     public Attributes Attributes { get; set; }
 
-
     public ClassSkills ClassSkills { get; set; }
 
     public ItemList PlayerItemList { get; set; }
@@ -92,7 +91,7 @@ public class D2S
             Created = reader.ReadUInt32(),
             LastPlayed = reader.ReadUInt32(),
             Unk0x0034 = reader.ReadBytes(4),
-            AssignedSkills = Enumerable.Range(0, 16).Select(e => Skill.Read(reader)).ToArray(),
+            AssignedSkills = Enumerable.Range(0, 16).Select(_ => Skill.Read(reader)).ToArray(),
             LeftSkill = Skill.Read(reader),
             RightSkill = Skill.Read(reader),
             LeftSwapSkill = Skill.Read(reader),
@@ -103,8 +102,8 @@ public class D2S
             Unk0x00af = reader.ReadBytes(2),
             Mercenary = Mercenary.Read(reader),
             RealmData = reader.ReadBytes(140),
-            Quests = QuestsSection.Read(reader.ReadBytes(302)),
-            Waypoints = WaypointsSection.Read(reader.ReadBytes(80)),
+            Quests = QuestsSection.Read(reader),
+            Waypoints = WaypointsSection.Read(reader),
             NPCDialog = NPCDialogSection.Read(reader.ReadBytes(52)),
             Attributes = Attributes.Read(reader)
         };
@@ -154,8 +153,8 @@ public class D2S
         d2s.Mercenary.Write(writer);
         //0x00bf [unk = 0x0] (server related data)
         writer.WriteBytes(d2s.RealmData ?? new byte[140]);
-        writer.WriteBytes(QuestsSection.Write(d2s.Quests));
-        writer.WriteBytes(WaypointsSection.Write(d2s.Waypoints));
+        d2s.Quests.Write(writer);
+        d2s.Waypoints.Write(writer);
         writer.WriteBytes(NPCDialogSection.Write(d2s.NPCDialog));
         d2s.Attributes.Write(writer);
         d2s.ClassSkills.Write(writer);

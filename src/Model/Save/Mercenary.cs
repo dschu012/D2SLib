@@ -11,7 +11,7 @@ public class Mercenary
     public ushort TypeId { get; set; }
     public uint Experience { get; set; }
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         writer.WriteUInt16(IsDead);
         writer.WriteUInt32(Id);
@@ -20,7 +20,7 @@ public class Mercenary
         writer.WriteUInt32(Experience);
     }
 
-    public static Mercenary Read(BitReader reader)
+    public static Mercenary Read(IBitReader reader)
     {
         var mercenary = new Mercenary
         {
@@ -54,7 +54,7 @@ public class MercenaryItemList
     public ushort? Header { get; set; }
     public ItemList? ItemList { get; set; }
 
-    public void Write(BitWriter writer, Mercenary mercenary, uint version)
+    public void Write(IBitWriter writer, Mercenary mercenary, uint version)
     {
         writer.WriteUInt16(Header ?? 0x666A);
         if (mercenary.Id != 0)
@@ -63,7 +63,7 @@ public class MercenaryItemList
         }
     }
 
-    public static MercenaryItemList Read(BitReader reader, Mercenary mercenary, uint version)
+    public static MercenaryItemList Read(IBitReader reader, Mercenary mercenary, uint version)
     {
         var mercenaryItemList = new MercenaryItemList
         {

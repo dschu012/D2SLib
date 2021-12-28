@@ -57,7 +57,7 @@ public class ItemList
     public ushort Count { get; set; }
     public List<Item> Items { get; }
 
-    public void Write(BitWriter writer, uint version)
+    public void Write(IBitWriter writer, uint version)
     {
         writer.WriteUInt16(Header ?? 0x4D4A);
         writer.WriteUInt16(Count);
@@ -67,7 +67,7 @@ public class ItemList
         }
     }
 
-    public static ItemList Read(BitReader reader, uint version)
+    public static ItemList Read(IBitReader reader, uint version)
     {
         var itemList = new ItemList(
             header: reader.ReadUInt16(),
@@ -139,7 +139,7 @@ public class Item
     public bool IsPersonalized { get => Flags[24]; set => Flags[24] = value; }
     public bool IsRuneword { get => Flags[26]; set => Flags[26] = value; }
 
-    public void Write(BitWriter writer, uint version)
+    public void Write(IBitWriter writer, uint version)
     {
         if (version <= 0x60)
         {
@@ -164,7 +164,7 @@ public class Item
         return Read(reader, version);
     }
 
-    public static Item Read(BitReader reader, uint version)
+    public static Item Read(IBitReader reader, uint version)
     {
         var item = new Item();
         if (version <= 0x60)
@@ -192,7 +192,7 @@ public class Item
         return writer.ToArray();
     }
 
-    protected static string ReadPlayerName(BitReader reader)
+    protected static string ReadPlayerName(IBitReader reader)
     {
         char[] name = new char[15];
         for (int i = 0; i < name.Length; i++)
@@ -206,7 +206,7 @@ public class Item
         return new string(name);
     }
 
-    protected static void WritePlayerName(BitWriter writer, string name)
+    protected static void WritePlayerName(IBitWriter writer, string name)
     {
         byte[] bytes = Encoding.ASCII.GetBytes(name.Replace("\0", ""));
         for (int i = 0; i < bytes.Length; i++)
@@ -216,7 +216,7 @@ public class Item
         writer.WriteByte((byte)'\0', 7);
     }
 
-    protected static void ReadCompact(BitReader reader, Item item, uint version)
+    protected static void ReadCompact(IBitReader reader, Item item, uint version)
     {
         Span<byte> bytes = stackalloc byte[4];
         reader.ReadBytes(bytes);
@@ -258,7 +258,7 @@ public class Item
         }
     }
 
-    protected static void WriteCompact(BitWriter writer, Item item, uint version)
+    protected static void WriteCompact(IBitWriter writer, Item item, uint version)
     {
         if (item.Flags is not InternalBitArray flags)
         {
@@ -317,7 +317,7 @@ public class Item
 
     }
 
-    protected static void ReadComplete(BitReader reader, Item item, uint version)
+    protected static void ReadComplete(IBitReader reader, Item item, uint version)
     {
         item.Id = reader.ReadUInt32();
         item.ItemLevel = reader.ReadByte(7);
@@ -432,7 +432,7 @@ public class Item
         }
     }
 
-    protected static void WriteComplete(BitWriter writer, Item item, uint version)
+    protected static void WriteComplete(IBitWriter writer, Item item, uint version)
     {
         writer.WriteUInt32(item.Id);
         writer.WriteByte(item.ItemLevel, 7);
@@ -562,7 +562,7 @@ public class ItemStatList
 
     public List<ItemStat> Stats { get; set; } = new List<ItemStat>();
 
-    public static ItemStatList Read(BitReader reader)
+    public static ItemStatList Read(IBitReader reader)
     {
         var itemStatList = new ItemStatList();
         ushort id = reader.ReadUInt16(9);
@@ -584,7 +584,7 @@ public class ItemStatList
         return itemStatList;
     }
 
-    public static void Write(BitWriter writer, ItemStatList itemStatList)
+    public static void Write(IBitWriter writer, ItemStatList itemStatList)
     {
         for (int i = 0; i < itemStatList.Stats.Count; i++)
         {
@@ -622,7 +622,7 @@ public class ItemStat
     public int? Param { get; set; }
     public int Value { get; set; }
 
-    public static ItemStat Read(BitReader reader, ushort id)
+    public static ItemStat Read(IBitReader reader, ushort id)
     {
         var itemStat = new ItemStat();
         var property = Core.TXT.ItemStatCostTXT[id];
@@ -676,7 +676,7 @@ public class ItemStat
         return itemStat;
     }
 
-    public static void Write(BitWriter writer, ItemStat stat)
+    public static void Write(IBitWriter writer, ItemStat stat)
     {
         var property = GetStatRow(stat);
         if (property == null)

@@ -12,7 +12,7 @@ public class ClassSkills
 
     public ClassSkill this[int i] => Skills[i];
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         writer.WriteUInt16(Header ?? 0x6669);
         for (int i = 0; i < SKILL_COUNT; i++)
@@ -21,7 +21,7 @@ public class ClassSkills
         }
     }
 
-    public static ClassSkills Read(BitReader reader, int playerClass)
+    public static ClassSkills Read(IBitReader reader, int playerClass)
     {
         var classSkills = new ClassSkills
         {
@@ -57,7 +57,7 @@ public class ClassSkill
     public uint Id { get; set; }
     public byte Points { get; set; }
 
-    public void Write(BitWriter writer) => writer.WriteByte(Points);
+    public void Write(IBitWriter writer) => writer.WriteByte(Points);
 
     public static ClassSkill Read(uint id, byte points)
     {
@@ -83,7 +83,7 @@ public class Skill
 {
     public uint Id { get; set; }
 
-    public void Write(BitWriter writer) => writer.WriteUInt32(Id);
+    public void Write(IBitWriter writer) => writer.WriteUInt32(Id);
 
     public static Skill Read(BitReader reader)
     {

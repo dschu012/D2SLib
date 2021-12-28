@@ -63,9 +63,9 @@ public sealed class BitWriter : IBitWriter, IDisposable
         }
     }
 
-    internal void WriteBits(InternalBitArray bits) => WriteBits(bits, bits.Length);
+    public void WriteBits(IList<bool> bits) => WriteBits(bits, bits.Count);
 
-    internal void WriteBits(InternalBitArray bits, int numberOfBits)
+    public void WriteBits(IList<bool> bits, int numberOfBits)
     {
         for (int i = 0; i < numberOfBits; i++)
         {

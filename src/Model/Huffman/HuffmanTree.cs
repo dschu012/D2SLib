@@ -87,7 +87,7 @@ namespace D2SLib.Model.Huffman
             return new BitArray(encodedSymbol.ToArray());
         }
 
-        public char DecodeChar(BitReader reader)
+        public char DecodeChar(IBitReader reader)
         {
             Node current = this.Root;
             while(!current.IsLeaf())

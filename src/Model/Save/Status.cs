@@ -17,7 +17,7 @@ public class Status
     public bool IsExpansion { get => Flags[5]; set => Flags[5] = value; }
     public bool IsLadder { get => Flags[6]; set => Flags[6] = value; }
 
-    public void Write(BitWriter writer)
+    public void Write(IBitWriter writer)
     {
         var bits = (InternalBitArray)Flags;
         writer.WriteBits(bits);
