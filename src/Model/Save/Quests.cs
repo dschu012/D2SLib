@@ -69,9 +69,14 @@ public sealed class QuestsSection
 
 public sealed class QuestsDifficulty
 {
-#nullable disable
-    private QuestsDifficulty() { }
-#nullable enable
+    private QuestsDifficulty(IBitReader reader)
+    {
+        ActI = ActIQuests.Read(reader);
+        ActII = ActIIQuests.Read(reader);
+        ActIII = ActIIIQuests.Read(reader);
+        ActIV = ActIVQuests.Read(reader);
+        ActV = ActVQuests.Read(reader);
+    }
 
     public ActIQuests ActI { get; set; }
     public ActIIQuests ActII { get; set; }
@@ -90,15 +95,7 @@ public sealed class QuestsDifficulty
 
     public static QuestsDifficulty Read(IBitReader reader)
     {
-        var qd = new QuestsDifficulty
-        {
-            ActI = ActIQuests.Read(reader),
-            ActII = ActIIQuests.Read(reader),
-            ActIII = ActIIIQuests.Read(reader),
-            ActIV = ActIVQuests.Read(reader),
-            ActV = ActVQuests.Read(reader)
-        };
-
+        var qd = new QuestsDifficulty(reader);
         return qd;
     }
 

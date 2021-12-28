@@ -63,9 +63,18 @@ public class WaypointsSection
 
 public class WaypointsDifficulty
 {
-#nullable disable
-    private WaypointsDifficulty() { }
-#nullable enable
+    private WaypointsDifficulty(IBitReader reader)
+    {
+        Header = reader.ReadUInt16();
+        ActI = ActIWaypoints.Read(reader);
+        ActII = ActIIWaypoints.Read(reader);
+        ActIII = ActIIIWaypoints.Read(reader);
+        ActIV = ActIVWaypoints.Read(reader);
+        ActV = ActVWaypoints.Read(reader);
+
+        reader.Align();
+        reader.AdvanceBits(17 * 8);
+    }
 
     //[0x02, 0x01]
     public ushort? Header { get; set; }
@@ -95,21 +104,7 @@ public class WaypointsDifficulty
 
     public static WaypointsDifficulty Read(IBitReader reader)
     {
-        ushort header = reader.ReadUInt16();
-
-        var waypointsDifficulty = new WaypointsDifficulty
-        {
-            Header = header,
-            ActI = ActIWaypoints.Read(reader),
-            ActII = ActIIWaypoints.Read(reader),
-            ActIII = ActIIIWaypoints.Read(reader),
-            ActIV = ActIVWaypoints.Read(reader),
-            ActV = ActVWaypoints.Read(reader)
-        };
-
-        reader.Align();
-        reader.AdvanceBits(17 * 8);
-
+        var waypointsDifficulty = new WaypointsDifficulty(reader);
         return waypointsDifficulty;
     }
 

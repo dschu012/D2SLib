@@ -49,9 +49,13 @@ public sealed class CorpseList
 
 public sealed class Corpse
 {
-#nullable disable
-    private Corpse() { }
-#nullable enable
+    private Corpse(IBitReader reader, uint version)
+    {
+        Unk0x0 = reader.ReadUInt32();
+        X = reader.ReadUInt32();
+        Y = reader.ReadUInt32();
+        ItemList = ItemList.Read(reader, version);
+    }
 
     public uint? Unk0x0 { get; set; }
     public uint X { get; set; }
@@ -68,13 +72,7 @@ public sealed class Corpse
 
     public static Corpse Read(IBitReader reader, uint version)
     {
-        var corpse = new Corpse
-        {
-            Unk0x0 = reader.ReadUInt32(),
-            X = reader.ReadUInt32(),
-            Y = reader.ReadUInt32(),
-            ItemList = ItemList.Read(reader, version)
-        };
+        var corpse = new Corpse(reader, version);
         return corpse;
     }
 
