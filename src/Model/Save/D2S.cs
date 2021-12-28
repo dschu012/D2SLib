@@ -159,7 +159,7 @@ public class D2S
         d2s.Attributes.Write(writer);
         d2s.ClassSkills.Write(writer);
         d2s.PlayerItemList.Write(writer, d2s.Header.Version);
-        writer.WriteBytes(CorpseList.Write(d2s.PlayerCorpses, d2s.Header.Version));
+        d2s.PlayerCorpses.Write(writer, d2s.Header.Version);
         if (d2s.Status.IsExpansion)
         {
             d2s.MercenaryItemList.Write(writer, d2s.Mercenary, d2s.Header.Version);
