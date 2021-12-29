@@ -9,7 +9,7 @@ public class LoadGame
     private byte[] _saveData = Array.Empty<byte>();
 
     [Benchmark]
-    public void LoadComplexSave()
+    public void LoadOnly()
     {
         _ = Core.ReadD2S(_saveData);
     }

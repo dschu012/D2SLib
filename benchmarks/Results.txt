@@ -10,10 +10,10 @@ Original:
 
 Revised:
 
-|          Method |        Job |       Runtime |     Mean |     Error |    StdDev |    Gen 0 |   Gen 1 | Allocated |
-|---------------- |----------- |-------------- |---------:|----------:|----------:|---------:|--------:|----------:|
-| LoadComplexSave | Job-YPQPEF |      .NET 6.0 | 1.340 ms | 0.0141 ms | 0.0118 ms |  23.4375 |  3.9063 |    115 KB |
-|     LoadAndSave | Job-YPQPEF |      .NET 6.0 | 3.727 ms | 0.0359 ms | 0.0336 ms | 308.5938 | 74.2188 |  1,420 KB |
-| LoadComplexSave | Job-MNRYZO | .NET Core 3.1 | 2.154 ms | 0.0279 ms | 0.0261 ms |  23.4375 |  3.9063 |    115 KB |
-|     LoadAndSave | Job-MNRYZO | .NET Core 3.1 | 5.892 ms | 0.0390 ms | 0.0346 ms | 304.6875 | 70.3125 |  1,420 KB |
+|      Method |        Job |       Runtime |       Mean |    Error |   StdDev |    Gen 0 |   Gen 1 | Allocated |
+|------------ |----------- |-------------- |-----------:|---------:|---------:|---------:|--------:|----------:|
+|    LoadOnly | Job-BVCAMA |      .NET 6.0 |   679.0 us |  6.32 us |  5.91 us |  49.8047 | 10.7422 |    231 KB |
+| LoadAndSave | Job-BVCAMA |      .NET 6.0 | 2,368.3 us | 12.91 us | 11.44 us | 359.3750 | 89.8438 |  1,669 KB |
+|    LoadOnly | Job-DVSMTK | .NET Core 3.1 |   911.4 us |  6.00 us |  5.32 us |  49.8047 | 10.7422 |    231 KB |
+| LoadAndSave | Job-DVSMTK | .NET Core 3.1 | 3,006.8 us | 26.59 us | 24.87 us | 359.3750 | 89.8438 |  1,669 KB |
 

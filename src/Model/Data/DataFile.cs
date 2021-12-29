@@ -1,43 +1,213 @@
 ﻿using Microsoft.Toolkit.HighPerformance;
 using Microsoft.Toolkit.HighPerformance.Buffers;
+using System.Collections;
+using System.Diagnostics;
 
 namespace D2SLib.Model.Data;
 
-public abstract class DataFile
+public abstract class DataFile : IList<DataRow>
 {
-    public Dictionary<string, int> Columns { get; } = new();
-    public List<DataRow> Rows { get; } = new();
+    private DataColumn[] _columns = Array.Empty<DataColumn>();
+    private readonly Dictionary<string, int> _columnsLookup = new();
+
+    public IReadOnlyDictionary<string, int> ColumnNames => _columnsLookup;
+    public ReadOnlySpan<DataColumn> Columns => _columns;
+    public IList<DataRow> Rows => this;
 
     protected void ReadData(Stream data)
     {
-        Columns.Clear();
-        Rows.Clear();
+        _columns = Array.Empty<DataColumn>();
+        _columnsLookup.Clear();
 
         using var reader = new StreamReader(data);
 
-        //skip header
-        int idx = 0;
-        foreach (var col in reader.ReadLine()!.Tokenize('\t'))
-        {
-            Columns.TryAdd(StringPool.Shared.GetOrAdd(col), idx++);
-        }
+        var colNames = new List<string>();
 
-        string? line;
+        int colIndex = 0;
+        int rowIndex = 0;
+        string? line = null;
         while ((line = reader.ReadLine()) is not null)
         {
-            Rows.Add(new DataRow(Columns, line.AsSpan()));
+            var curLine = line.AsSpan();
+            colIndex = 0;
+
+            if (_columns.Length == 0)
+            {
+                // parse column names from header line
+                foreach (var colName in curLine.Tokenize('\t'))
+                {
+                    colNames.Add(StringPool.Shared.GetOrAdd(colName));
+                    _columnsLookup.TryAdd(colNames[colIndex], colIndex);
+                    colIndex++;
+                }
+
+                _columns = new DataColumn[colIndex];
+                continue;
+            }
+
+            //if (_columns.Length == 0)
+            //{
+            //    // infer column types, create columns
+                
+            //    foreach (var value in curLine.Tokenize('\t'))
+            //    {
+            //        if (ushort.TryParse(value, out var ushortVal))
+            //        {
+            //            var col = new UInt16DataColumn(colNames[colIndex]);
+            //            col.AddValue(ushortVal);
+            //            _columns[colIndex] = col;
+            //        }
+            //        else if (int.TryParse(value, out var intVal))
+            //        {
+            //            var col = new Int32DataColumn(colNames[colIndex]);
+            //            col.AddValue(intVal);
+            //            _columns[colIndex] = col;
+            //        }
+            //        else
+            //        {
+            //            var col = new StringDataColumn(colNames[colIndex]);
+            //            col.AddValue(StringPool.Shared.GetOrAdd(value));
+            //            _columns[colIndex] = col;
+            //        }
+
+            //        colIndex++;
+            //    }
+
+            //    while (colIndex < colNames.Count)
+            //    {
+            //        var col = new StringDataColumn(colNames[colIndex]);
+            //        col.AddEmptyValue();
+            //        _columns[colIndex++] = col;
+            //    }
+
+            //    continue;
+            //}
+
+            // add data to existing columns
+            foreach (var value in curLine.Tokenize('\t'))
+            {
+                var col = _columns[colIndex] ??= new StringDataColumn(colNames[colIndex]);
+
+                if (value.IsEmpty)
+                {
+                    col.AddEmptyValue();
+                }
+                else if (ushort.TryParse(value, out var ushortVal))
+                {
+                    switch (col)
+                    {
+                        case UInt16DataColumn ushortCol:
+                            ushortCol.AddValue(ushortVal);
+                            break;
+                        case Int32DataColumn intCol:
+                            intCol.AddValue(ushortVal);
+                            break;
+                        case StringDataColumn stringCol:
+                            {
+                                // we need to upgrade this column to a UInt16DataColum (if previous rows were blank)
+                                var newCol = new UInt16DataColumn(stringCol.Name);
+                                foreach (var v in stringCol.Values)
+                                {
+                                    if (string.IsNullOrEmpty(v))
+                                        newCol.AddEmptyValue();
+                                    else
+                                        throw new InvalidOperationException($"Trying to add the number {ushortVal} to a string column with previous values (row {rowIndex + 1}, col {colIndex + 1})");
+                                }
+                                newCol.AddValue(ushortVal);
+                                _columns[colIndex] = newCol;
+                            }
+                            break;
+                        default:
+                            throw new InvalidOperationException("Unsupported column type.");
+                    }
+                }
+                else if (int.TryParse(value, out var intVal))
+                {
+                    switch (col)
+                    {
+                        case Int32DataColumn intCol:
+                            intCol.AddValue(intVal);
+                            break;
+                        case UInt16DataColumn ushortCol:
+                            {
+                                // we need to upgrade this column to an Int32DataColumn to hold this data
+                                var newCol = new Int32DataColumn(ushortCol.Name);
+                                foreach (var v in ushortCol.Values)
+                                {
+                                    newCol.AddValue(v);
+                                }
+                                newCol.AddValue(intVal);
+                                _columns[colIndex] = newCol;
+                            }
+                            break;
+                        case StringDataColumn stringCol:
+                            {
+                                // we need to upgrade this column to an Int32DataColumn (if previous rows were blank)
+                                var newCol = new Int32DataColumn(stringCol.Name);
+                                foreach (var v in stringCol.Values)
+                                {
+                                    if (string.IsNullOrEmpty(v))
+                                        newCol.AddEmptyValue();
+                                    else
+                                        throw new InvalidOperationException($"Trying to add the number {intVal} to a string column with previous values (row {rowIndex + 1}, col {colIndex + 1})");
+                                }
+                                newCol.AddValue(intVal);
+                                _columns[colIndex] = newCol;
+                            }
+                            break;
+                        default:
+                            throw new InvalidOperationException("Unsupported column type.");
+                    }
+                }
+                else // string value
+                {
+                    if (col is StringDataColumn stringCol)
+                    {
+                        stringCol.AddValue(StringPool.Shared.GetOrAdd(value));
+                    }
+                    else
+                    {
+                        if (value.Trim().IsEmpty)
+                        {
+                            col.AddEmptyValue();
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Non-empty string '{value.ToString()}' being added to a {col.GetType().Name} column (row {rowIndex + 1}, col {colIndex + 1})");
+                        }
+                    }
+                }
+
+                colIndex++;
+            }
+
+            // if any columns didn't have a row added, add empty values
+            while (colIndex < _columns.Length)
+            {
+                _columns[colIndex++].AddEmptyValue();
+            }
+
+            rowIndex++;
         }
     }
 
     public DataRow? GetByColumnAndValue(string name, ReadOnlySpan<char> value)
     {
-        if (Columns.TryGetValue(name, out var colIdx))
+        if (int.TryParse(value, out int parsed))
         {
-            foreach (var row in Rows)
+            return GetByColumnAndValue(name, parsed);
+        }
+
+        if (ColumnNames.TryGetValue(name, out var colIdx))
+        {
+            var col = _columns[colIdx];
+            value = value.Trim();
+
+            for (int i = 0; i < col.Count; i++)
             {
-                if (row[colIdx].Value.AsSpan().Trim().Equals(value.Trim(), StringComparison.Ordinal))
+                if (value.Equals(col.GetString(i).AsSpan().Trim(), StringComparison.Ordinal))
                 {
-                    return row;
+                    return new DataRow(this, i);
                 }
             }
         }
@@ -46,77 +216,98 @@ public abstract class DataFile
 
     public DataRow? GetByColumnAndValue(string name, int value)
     {
-        if (Columns.TryGetValue(name, out var colIdx))
+        if (ColumnNames.TryGetValue(name, out var colIdx))
         {
-            foreach (var row in Rows)
+            var col = _columns[colIdx];
+
+            for (int i = 0; i < col.Count; i++)
             {
-                if (row[colIdx].ToInt32() == value)
+                if (col.GetInt32(i) == value)
                 {
-                    return row;
+                    return new DataRow(this, i);
                 }
             }
         }
         return null;
     }
+
+    #region IList<DataRow> implementation
+
+    int ICollection<DataRow>.Count => _columns.Length == 0 ? 0 : _columns[0].Count;
+
+    bool ICollection<DataRow>.IsReadOnly => true;
+
+    DataRow IList<DataRow>.this[int index]
+    {
+        get
+        {
+            if ((uint)index >= (uint)(_columns.Length == 0 ? 0 : _columns[0].Count))
+                throw new ArgumentOutOfRangeException(nameof(index));
+            return new DataRow(this, index);
+        }
+        set => throw new NotSupportedException();
+    }
+
+    private IEnumerable<DataRow> GetRows()
+    {
+        if (_columns.Length > 0)
+        {
+            for (int i = 0, len = _columns[0].Count; i < len; i++)
+            {
+                yield return new DataRow(this, i);
+            }
+        }
+    }
+
+    int IList<DataRow>.IndexOf(DataRow item) => throw new NotSupportedException();
+    void IList<DataRow>.Insert(int index, DataRow item) => throw new NotSupportedException();
+    void IList<DataRow>.RemoveAt(int index) => throw new NotSupportedException();
+    void ICollection<DataRow>.Add(DataRow item) => throw new NotSupportedException();
+    void ICollection<DataRow>.Clear() => throw new NotSupportedException();
+    bool ICollection<DataRow>.Contains(DataRow item) => throw new NotSupportedException();
+    void ICollection<DataRow>.CopyTo(DataRow[] array, int arrayIndex) => throw new NotImplementedException();
+    bool ICollection<DataRow>.Remove(DataRow item) => throw new NotImplementedException();
+    IEnumerator<DataRow> IEnumerable<DataRow>.GetEnumerator() => GetRows().GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetRows().GetEnumerator();
+
+    #endregion
 }
 
+[DebuggerDisplay("Row {RowIndex}")]
 public sealed class DataRow
 {
-    public DataRow(IReadOnlyDictionary<string, int> columns, ReadOnlySpan<char> data)
+    private readonly DataFile _data;
+
+    public DataRow(DataFile data, int rowIndex)
     {
-        Columns = columns;
-        var cells = new List<DataCell>(columns.Count);
-        foreach (var value in data.Tokenize('\t'))
-        {
-            cells.Add(DataCell.Create(value));
-        }
-        Data = cells.ToArray();
+        _data = data;
+        RowIndex = rowIndex;
     }
 
-    public IReadOnlyDictionary<string, int> Columns { get; }
-    public DataCell[] Data { get; }
+    public int RowIndex { get; }
 
-    public DataCell this[int i] => Data[i];
-    public DataCell this[string colName] => Data[Columns[colName]];
+    public DataCell this[int colIndex] => new(_data, colIndex, RowIndex);
+    public DataCell this[string colName] => new(_data, _data.ColumnNames[colName], RowIndex);
 }
 
-public abstract class DataCell
+[DebuggerDisplay("Cell (row {RowIndex}, col {ColIndex})")]
+public sealed class DataCell
 {
-    public abstract string Value { get; }
-    public abstract int ToInt32();
-    public abstract ushort ToUInt16();
-    public abstract bool ToBool();
+    private readonly DataFile _data;
 
-    public static DataCell Create(ReadOnlySpan<char> value)
+    public DataCell(DataFile data, int colIndex, int rowIndex)
     {
-        if (int.TryParse(value, out int intVal))
-        {
-            return new Int32DataCell(intVal);
-        }
-
-        return new StringDataCell(value.IsEmpty ? string.Empty : StringPool.Shared.GetOrAdd(value));
+        _data = data;
+        ColIndex = colIndex;
+        RowIndex = rowIndex;
     }
-}
 
-public sealed class StringDataCell : DataCell
-{
-    public StringDataCell(string value) => Value = value;
+    public int RowIndex { get; }
+    public int ColIndex { get; }
 
-    public override string Value { get; }
-
-    public override int ToInt32() => 0;
-    public override ushort ToUInt16() => 0;
-    public override bool ToBool() => false;
-}
-
-public sealed class Int32DataCell : DataCell
-{
-    private readonly int _value;
-    public Int32DataCell(int value) => _value = value;
-
-    public override string Value => _value.ToString();
-    public override int ToInt32() => _value;
-    public override ushort ToUInt16() => (ushort)_value;
-    public override bool ToBool() => _value != 0;
+    public string Value => _data.Columns[ColIndex].GetString(RowIndex);
+    public int ToInt32() => _data.Columns[ColIndex].GetInt32(RowIndex);
+    public ushort ToUInt16() => _data.Columns[ColIndex].GetUInt16(RowIndex);
+    public bool ToBool() => _data.Columns[ColIndex].GetBoolean(RowIndex);
 }
 
