@@ -1,0 +1,14 @@
+Original, load complex save:
+
+|          Method |        Job |       Runtime |     Mean |   Error |  StdDev | Allocated |
+|---------------- |----------- |-------------- |---------:|--------:|--------:|----------:|
+| LoadComplexSave | Job-SSHODX |      .NET 6.0 | 171.1 ms | 3.40 ms | 7.67 ms |      1 MB |
+| LoadComplexSave | Job-AEQOGU | .NET Core 3.1 | 170.7 ms | 3.39 ms | 7.51 ms |      1 MB |
+
+Revised, load same save:
+
+|          Method |        Job |       Runtime |     Mean |     Error |    StdDev |   Gen 0 |  Gen 1 | Allocated |
+|---------------- |----------- |-------------- |---------:|----------:|----------:|--------:|-------:|----------:|
+| LoadComplexSave | Job-KBRNVU |      .NET 6.0 | 1.359 ms | 0.0175 ms | 0.0163 ms | 23.4375 | 3.9063 |    115 KB |
+| LoadComplexSave | Job-ALJOBF | .NET Core 3.1 | 2.148 ms | 0.0180 ms | 0.0168 ms | 23.4375 | 3.9063 |    115 KB |
+

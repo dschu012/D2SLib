@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
+	<LangVersion>10</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>D2SLib_Benchmark</RootNamespace>
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <None Include="..\..\test\Resources\**\*">
+      <Link>Resources\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\D2SLib_Local.Benchmark\BenchmarkConfig.cs" Link="BenchmarkConfig.cs" />
+    <Compile Include="..\D2SLib_Local.Benchmark\LoadGame.cs" Link="LoadGame.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+    <PackageReference Include="D2SLib" Version="1.0.2" />
+  </ItemGroup>
+
+</Project>
