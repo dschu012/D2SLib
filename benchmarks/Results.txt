@@ -1,14 +1,19 @@
-Original, load complex save:
+Original:
 
-|          Method |        Job |       Runtime |     Mean |   Error |  StdDev | Allocated |
-|---------------- |----------- |-------------- |---------:|--------:|--------:|----------:|
-| LoadComplexSave | Job-SSHODX |      .NET 6.0 | 171.1 ms | 3.40 ms | 7.67 ms |      1 MB |
-| LoadComplexSave | Job-AEQOGU | .NET Core 3.1 | 170.7 ms | 3.39 ms | 7.51 ms |      1 MB |
+|          Method |        Job |       Runtime |     Mean |    Error |   StdDev |   Median | Allocated |
+|---------------- |----------- |-------------- |---------:|---------:|---------:|---------:|----------:|
+| LoadComplexSave | Job-OLJBSE |      .NET 6.0 | 173.1 ms |  3.45 ms |  7.50 ms | 174.0 ms |      1 MB |
+|     LoadAndSave | Job-OLJBSE |      .NET 6.0 | 479.4 ms | 19.30 ms | 56.92 ms | 525.1 ms |      3 MB |
+| LoadComplexSave | Job-LTIRQF | .NET Core 3.1 | 172.6 ms |  3.44 ms |  7.70 ms | 173.4 ms |      1 MB |
+|     LoadAndSave | Job-LTIRQF | .NET Core 3.1 | 489.1 ms | 21.48 ms | 63.01 ms | 528.2 ms |      4 MB |
 
-Revised, load same save:
 
-|          Method |        Job |       Runtime |     Mean |     Error |    StdDev |   Gen 0 |  Gen 1 | Allocated |
-|---------------- |----------- |-------------- |---------:|----------:|----------:|--------:|-------:|----------:|
-| LoadComplexSave | Job-KBRNVU |      .NET 6.0 | 1.359 ms | 0.0175 ms | 0.0163 ms | 23.4375 | 3.9063 |    115 KB |
-| LoadComplexSave | Job-ALJOBF | .NET Core 3.1 | 2.148 ms | 0.0180 ms | 0.0168 ms | 23.4375 | 3.9063 |    115 KB |
+Revised:
+
+|          Method |        Job |       Runtime |     Mean |     Error |    StdDev |    Gen 0 |   Gen 1 | Allocated |
+|---------------- |----------- |-------------- |---------:|----------:|----------:|---------:|--------:|----------:|
+| LoadComplexSave | Job-YPQPEF |      .NET 6.0 | 1.340 ms | 0.0141 ms | 0.0118 ms |  23.4375 |  3.9063 |    115 KB |
+|     LoadAndSave | Job-YPQPEF |      .NET 6.0 | 3.727 ms | 0.0359 ms | 0.0336 ms | 308.5938 | 74.2188 |  1,420 KB |
+| LoadComplexSave | Job-MNRYZO | .NET Core 3.1 | 2.154 ms | 0.0279 ms | 0.0261 ms |  23.4375 |  3.9063 |    115 KB |
+|     LoadAndSave | Job-MNRYZO | .NET Core 3.1 | 5.892 ms | 0.0390 ms | 0.0346 ms | 304.6875 | 70.3125 |  1,420 KB |
 

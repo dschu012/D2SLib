@@ -14,6 +14,13 @@ public class LoadGame
         _ = Core.ReadD2S(_saveData);
     }
 
+    [Benchmark]
+    public void LoadAndSave()
+    {
+        var saveGame = Core.ReadD2S(_saveData);
+        _ = Core.WriteD2S(saveGame);
+    }
+
     [GlobalSetup]
     public void GlobalSetup()
     {
