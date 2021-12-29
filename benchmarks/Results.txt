@@ -1,19 +1,17 @@
 Original:
 
-|          Method |        Job |       Runtime |     Mean |    Error |   StdDev |   Median | Allocated |
-|---------------- |----------- |-------------- |---------:|---------:|---------:|---------:|----------:|
-| LoadComplexSave | Job-OLJBSE |      .NET 6.0 | 173.1 ms |  3.45 ms |  7.50 ms | 174.0 ms |      1 MB |
-|     LoadAndSave | Job-OLJBSE |      .NET 6.0 | 479.4 ms | 19.30 ms | 56.92 ms | 525.1 ms |      3 MB |
-| LoadComplexSave | Job-LTIRQF | .NET Core 3.1 | 172.6 ms |  3.44 ms |  7.70 ms | 173.4 ms |      1 MB |
-|     LoadAndSave | Job-LTIRQF | .NET Core 3.1 | 489.1 ms | 21.48 ms | 63.01 ms | 528.2 ms |      4 MB |
-
+|   Method |        Job |       Runtime |     Mean |   Error |   StdDev |   Median |    Gen 0 | Allocated |
+|--------- |----------- |-------------- |---------:|--------:|---------:|---------:|---------:|----------:|
+| LoadOnly | Job-VRIZQQ |      .NET 6.0 | 168.7 ms | 3.35 ms |  7.36 ms | 169.5 ms |        - |      1 MB |
+| SaveOnly | Job-VRIZQQ |      .NET 6.0 | 304.1 ms | 8.64 ms | 25.49 ms | 316.7 ms | 500.0000 |      2 MB |
+| LoadOnly | Job-MMOSNL | .NET Core 3.1 | 169.7 ms | 3.37 ms |  7.68 ms | 170.3 ms |        - |      1 MB |
+| SaveOnly | Job-MMOSNL | .NET Core 3.1 | 304.2 ms | 8.02 ms | 23.15 ms | 316.4 ms | 500.0000 |      2 MB |
 
 Revised:
 
-|      Method |        Job |       Runtime |       Mean |    Error |   StdDev |    Gen 0 |   Gen 1 | Allocated |
-|------------ |----------- |-------------- |-----------:|---------:|---------:|---------:|--------:|----------:|
-|    LoadOnly | Job-BVCAMA |      .NET 6.0 |   679.0 us |  6.32 us |  5.91 us |  49.8047 | 10.7422 |    231 KB |
-| LoadAndSave | Job-BVCAMA |      .NET 6.0 | 2,368.3 us | 12.91 us | 11.44 us | 359.3750 | 89.8438 |  1,669 KB |
-|    LoadOnly | Job-DVSMTK | .NET Core 3.1 |   911.4 us |  6.00 us |  5.32 us |  49.8047 | 10.7422 |    231 KB |
-| LoadAndSave | Job-DVSMTK | .NET Core 3.1 | 3,006.8 us | 26.59 us | 24.87 us | 359.3750 | 89.8438 |  1,669 KB |
-
+|   Method |        Job |       Runtime |       Mean |    Error |   StdDev |    Gen 0 |   Gen 1 | Allocated |
+|--------- |----------- |-------------- |-----------:|---------:|---------:|---------:|--------:|----------:|
+| LoadOnly | Job-TRPBVX |      .NET 6.0 |   708.2 us |  5.30 us |  4.95 us |  49.8047 | 10.7422 |    231 KB |
+| SaveOnly | Job-TRPBVX |      .NET 6.0 | 1,619.9 us | 21.20 us | 16.55 us | 312.5000 |  5.8594 |  1,438 KB |
+| LoadOnly | Job-SMJWQL | .NET Core 3.1 |   886.8 us |  6.18 us |  5.16 us |  49.8047 | 10.7422 |    231 KB |
+| SaveOnly | Job-SMJWQL | .NET Core 3.1 | 1,991.9 us | 39.51 us | 35.02 us | 312.5000 |  3.9063 |  1,438 KB |
