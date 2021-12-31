@@ -25,7 +25,7 @@ public interface IBitWriter
     void WriteBytes(ReadOnlySpan<byte> value, int numberOfBits);
     void WriteInt32(int value);
     void WriteInt32(int value, int numberOfBits);
-    void WriteString(string s, int length);
+    void WriteString(ReadOnlySpan<char> s, int length);
     void WriteUInt16(ushort value);
     void WriteUInt16(ushort value, int numberOfBits);
     void WriteUInt32(uint value);
