@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace D2SLib.Model.Save;
 
-public sealed class QuestsSection
+public sealed class QuestsSection : IDisposable
 {
     private readonly QuestsDifficulty[] _difficulties = new QuestsDifficulty[3];
 
@@ -65,9 +65,17 @@ public sealed class QuestsSection
         questSection.Write(writer);
         return writer.ToArray();
     }
+
+    public void Dispose()
+    {
+        for (int i = 0; i < _difficulties.Length; i++)
+        {
+            Interlocked.Exchange(ref _difficulties[i]!, null)?.Dispose();
+        }
+    }
 }
 
-public sealed class QuestsDifficulty
+public sealed class QuestsDifficulty : IDisposable
 {
     private QuestsDifficulty(IBitReader reader)
     {
@@ -114,12 +122,21 @@ public sealed class QuestsDifficulty
         Debug.Assert(writer.Position == 96 * 8);
         return writer.ToArray();
     }
+
+    public void Dispose()
+    {
+        ActI.Dispose();
+        ActII.Dispose();
+        ActIII.Dispose();
+        ActIV.Dispose();
+        ActV.Dispose();
+    }
 }
 
 
-public sealed class Quest
+public sealed class Quest : IDisposable
 {
-    private readonly InternalBitArray _flags;
+    private InternalBitArray _flags;
 
     private Quest(InternalBitArray flags) => _flags = flags;
 
@@ -177,9 +194,11 @@ public sealed class Quest
         quest.Write(writer);
         return writer.ToArray();
     }
+
+    public void Dispose() => Interlocked.Exchange(ref _flags!, null)?.Dispose();
 }
 
-public sealed class ActIQuests
+public sealed class ActIQuests : IDisposable
 {
     private readonly Quest[] _quests = new Quest[8];
 
@@ -209,9 +228,17 @@ public sealed class ActIQuests
         }
         return quests;
     }
+
+    public void Dispose()
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            Interlocked.Exchange(ref _quests[i]!, null)?.Dispose();
+        }
+    }
 }
 
-public sealed class ActIIQuests
+public sealed class ActIIQuests : IDisposable
 {
     private readonly Quest[] _quests = new Quest[8];
 
@@ -241,9 +268,17 @@ public sealed class ActIIQuests
         }
         return quests;
     }
+
+    public void Dispose()
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            Interlocked.Exchange(ref _quests[i]!, null)?.Dispose();
+        }
+    }
 }
 
-public sealed class ActIIIQuests
+public sealed class ActIIIQuests : IDisposable
 {
     private readonly Quest[] _quests = new Quest[8];
 
@@ -273,9 +308,17 @@ public sealed class ActIIIQuests
         }
         return quests;
     }
+
+    public void Dispose()
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            Interlocked.Exchange(ref _quests[i]!, null)?.Dispose();
+        }
+    }
 }
 
-public sealed class ActIVQuests
+public sealed class ActIVQuests : IDisposable
 {
     private readonly Quest[] _quests = new Quest[8];
 
@@ -307,9 +350,17 @@ public sealed class ActIVQuests
         }
         return quests;
     }
+
+    public void Dispose()
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            Interlocked.Exchange(ref _quests[i]!, null)?.Dispose();
+        }
+    }
 }
 
-public sealed class ActVQuests
+public sealed class ActVQuests : IDisposable
 {
     private readonly Quest[] _quests = new Quest[16];
 
@@ -348,5 +399,13 @@ public sealed class ActVQuests
             quests._quests[i] = Quest.Read(reader);
         }
         return quests;
+    }
+
+    public void Dispose()
+    {
+        for (int i = 0; i < _quests.Length; i++)
+        {
+            Interlocked.Exchange(ref _quests[i]!, null)?.Dispose();
+        }
     }
 }

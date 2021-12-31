@@ -2,7 +2,7 @@
 
 namespace D2SLib.Model.Save;
 
-public class D2I
+public sealed class D2I : IDisposable
 {
     private D2I(IBitReader reader, uint version)
     {
@@ -31,4 +31,5 @@ public class D2I
         return writer.ToArray();
     }
 
+    public void Dispose() => ItemList?.Dispose();
 }

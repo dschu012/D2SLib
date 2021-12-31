@@ -2,7 +2,7 @@
 
 namespace D2SLib.Model.Save;
 
-public class WaypointsSection
+public sealed class WaypointsSection : IDisposable
 {
     private readonly WaypointsDifficulty[] _difficulties = new WaypointsDifficulty[3];
 
@@ -59,9 +59,17 @@ public class WaypointsSection
         waypointsSection.Write(writer);
         return writer.ToArray();
     }
+
+    public void Dispose()
+    {
+        for (int i = 0; i < _difficulties.Length; i++)
+        {
+            Interlocked.Exchange(ref _difficulties[i]!, null)?.Dispose();
+        }
+    }
 }
 
-public class WaypointsDifficulty
+public sealed class WaypointsDifficulty : IDisposable
 {
     private WaypointsDifficulty(IBitReader reader)
     {
@@ -122,11 +130,20 @@ public class WaypointsDifficulty
         waypointsDifficulty.Write(writer);
         return writer.ToArray();
     }
+
+    public void Dispose()
+    {
+        ActI.Dispose();
+        ActII.Dispose();
+        ActIII.Dispose();
+        ActIV.Dispose();
+        ActV.Dispose();
+    }
 }
 
-public sealed class ActIWaypoints
+public sealed class ActIWaypoints : IDisposable
 {
-    private readonly InternalBitArray _flags;
+    private InternalBitArray _flags;
     private ActIWaypoints(InternalBitArray flags) => _flags = flags;
 
     public bool RogueEncampement { get => _flags[0]; set => _flags[0] = value; }
@@ -154,11 +171,13 @@ public sealed class ActIWaypoints
         var bits = new InternalBitArray(bytes);
         return new ActIWaypoints(bits);
     }
+
+    public void Dispose() => Interlocked.Exchange(ref _flags!, null)?.Dispose();
 }
 
-public sealed class ActIIWaypoints
+public sealed class ActIIWaypoints : IDisposable
 {
-    private readonly InternalBitArray _flags;
+    private InternalBitArray _flags;
     private ActIIWaypoints(InternalBitArray flags) => _flags = flags;
 
     public bool LutGholein { get => _flags[0]; set => _flags[0] = value; }
@@ -186,11 +205,13 @@ public sealed class ActIIWaypoints
         var bits = new InternalBitArray(bytes);
         return new ActIIWaypoints(bits);
     }
+
+    public void Dispose() => Interlocked.Exchange(ref _flags!, null)?.Dispose();
 }
 
-public class ActIIIWaypoints
+public sealed class ActIIIWaypoints : IDisposable
 {
-    private readonly InternalBitArray _flags;
+    private InternalBitArray _flags;
     private ActIIIWaypoints(InternalBitArray flags) => _flags = flags;
 
     public bool KurastDocks { get => _flags[0]; set => _flags[0] = value; }
@@ -218,11 +239,13 @@ public class ActIIIWaypoints
         var bits = new InternalBitArray(bytes);
         return new ActIIIWaypoints(bits);
     }
+
+    public void Dispose() => Interlocked.Exchange(ref _flags!, null)?.Dispose();
 }
 
-public class ActIVWaypoints
+public sealed class ActIVWaypoints : IDisposable
 {
-    private readonly InternalBitArray _flags;
+    private InternalBitArray _flags;
     private ActIVWaypoints(InternalBitArray flags) => _flags = flags;
 
     public bool ThePandemoniumFortress { get => _flags[0]; set => _flags[0] = value; }
@@ -244,11 +267,13 @@ public class ActIVWaypoints
         var bits = new InternalBitArray(bytes);
         return new ActIVWaypoints(bits);
     }
+
+    public void Dispose() => Interlocked.Exchange(ref _flags!, null)?.Dispose();
 }
 
-public class ActVWaypoints
+public sealed class ActVWaypoints : IDisposable
 {
-    private readonly InternalBitArray _flags;
+    private InternalBitArray _flags;
     private ActVWaypoints(InternalBitArray flags) => _flags = flags;
 
     public bool Harrogath { get => _flags[0]; set => _flags[0] = value; }
@@ -276,4 +301,6 @@ public class ActVWaypoints
         var bits = new InternalBitArray(bytes);
         return new ActVWaypoints(bits);
     }
+
+    public void Dispose() => Interlocked.Exchange(ref _flags!, null)?.Dispose();
 }

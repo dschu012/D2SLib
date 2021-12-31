@@ -2,7 +2,7 @@
 
 namespace D2SLib.Model.Save;
 
-public sealed class CorpseList
+public sealed class CorpseList : IDisposable
 {
     public CorpseList(ushort? header, ushort count)
     {
@@ -45,9 +45,18 @@ public sealed class CorpseList
         corpseList.Write(writer, version);
         return writer.ToArray();
     }
+
+    public void Dispose()
+    {
+        foreach (var corpse in Corpses)
+        {
+            corpse?.Dispose();
+        }
+        Corpses.Clear();
+    }
 }
 
-public sealed class Corpse
+public sealed class Corpse : IDisposable
 {
     private Corpse(IBitReader reader, uint version)
     {
@@ -60,7 +69,7 @@ public sealed class Corpse
     public uint? Unk0x0 { get; set; }
     public uint X { get; set; }
     public uint Y { get; set; }
-    public ItemList ItemList { get; set; }
+    public ItemList ItemList { get; }
 
     public void Write(IBitWriter writer, uint version)
     {
@@ -83,5 +92,7 @@ public sealed class Corpse
         corpse.Write(writer, version);
         return writer.ToArray();
     }
+
+    public void Dispose() => ItemList.Dispose();
 }
 

@@ -4,6 +4,8 @@
 // Adapted from here, to allow for span-based constructor. Removed unused/unsafe code.
 // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Collections/src/System/Collections/BitArray.cs
 
+using Microsoft.Toolkit.HighPerformance;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections;
 using System.Diagnostics;
@@ -13,7 +15,7 @@ namespace D2SLib.IO;
 
 // A vector of bits.  Use this to store bits efficiently
 [Serializable]
-internal sealed class InternalBitArray : IList<bool>, ICloneable
+internal sealed class InternalBitArray : IList<bool>, ICloneable, IDisposable
 {
     private int[] m_array; // Do not rename (binary serialization)
     private int m_length; // Do not rename (binary serialization)
@@ -45,18 +47,20 @@ internal sealed class InternalBitArray : IList<bool>, ICloneable
             throw new ArgumentOutOfRangeException(nameof(length), length, "Length must be non-negative");
         }
 
-        m_array = new int[GetInt32ArrayLengthFromBitLength(length)];
+        int arrayLength = GetInt32ArrayLengthFromBitLength(length);
+        m_array = ArrayPool<int>.Shared.Rent(arrayLength);
         m_length = length;
 
         if (defaultValue)
         {
-            Array.Fill(m_array, -1);
+            var span = m_array.AsSpan(0, arrayLength);
+            span.Fill(-1);
 
             // clear high bit values in the last int
             Div32Rem(length, out int extraBits);
             if (extraBits > 0)
             {
-                m_array[^1] = (1 << extraBits) - 1;
+                span[^1] = (1 << extraBits) - 1;
             }
         }
 
@@ -81,7 +85,7 @@ internal sealed class InternalBitArray : IList<bool>, ICloneable
             throw new ArgumentException("Too many bytes!", nameof(bytes));
         }
 
-        m_array = new int[GetInt32ArrayLengthFromByteLength(bytes.Length)];
+        m_array = ArrayPool<int>.Shared.Rent(GetInt32ArrayLengthFromByteLength(bytes.Length));
         m_length = bytes.Length * BitsPerByte;
 
         uint totalCount = (uint)bytes.Length / 4;
@@ -127,7 +131,7 @@ internal sealed class InternalBitArray : IList<bool>, ICloneable
 
         int arrayLength = GetInt32ArrayLengthFromBitLength(bits.m_length);
 
-        m_array = new int[arrayLength];
+        m_array = ArrayPool<int>.Shared.Rent(arrayLength);
 
         Debug.Assert(bits.m_array.Length <= arrayLength);
 
@@ -237,7 +241,7 @@ internal sealed class InternalBitArray : IList<bool>, ICloneable
             if (newints > m_array.Length || newints + _ShrinkThreshold < m_array.Length)
             {
                 // grow or shrink (if wasting more than _ShrinkThreshold ints)
-                Array.Resize(ref m_array, newints);
+                ArrayPool<int>.Shared.Resize(ref m_array!, newints);
             }
 
             if (value > m_length)
@@ -332,6 +336,16 @@ internal sealed class InternalBitArray : IList<bool>, ICloneable
     bool ICollection<bool>.Contains(bool item) => throw new NotImplementedException();
     void ICollection<bool>.CopyTo(bool[] array, int arrayIndex) => throw new NotImplementedException();
     bool ICollection<bool>.Remove(bool item) => throw new NotImplementedException();
+
+    public void Dispose()
+    {
+        if (m_array.Length > 0)
+        {
+            ArrayPool<int>.Shared.Return(m_array);
+            m_array = Array.Empty<int>();
+            m_length = 0;
+        }
+    }
 
     private sealed class BitArrayEnumeratorSimple : IEnumerator<bool>, ICloneable
     {

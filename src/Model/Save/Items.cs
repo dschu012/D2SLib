@@ -44,7 +44,7 @@ public enum ItemQuality : byte
     Tempered
 }
 
-public class ItemList
+public sealed class ItemList : IDisposable
 {
     private ItemList(ushort header, ushort count)
     {
@@ -87,13 +87,41 @@ public class ItemList
         itemList.Write(writer, version);
         return writer.ToArray();
     }
+
+    public void Dispose()
+    {
+        foreach (var item in Items)
+        {
+            item?.Dispose();
+        }
+        Items.Clear();
+    }
 }
 
-public class Item
+public sealed class Item : IDisposable
 {
+    private InternalBitArray _flags = new(4);
+
     public ushort? Header { get; set; }
+
     [JsonIgnore]
-    public IList<bool> Flags { get; set; } = new InternalBitArray(4);
+    public IList<bool> Flags
+    {
+        get => _flags;
+        set
+        {
+            if (value is InternalBitArray flags)
+            {
+                _flags?.Dispose();
+                _flags = flags;
+            }
+            else
+            {
+                throw new ArgumentException("Flags were not of expected type.");
+            }
+        }
+    }
+
     public string? Version { get; set; }
     public ItemMode Mode { get; set; }
     public ItemLocation Location { get; set; }
@@ -105,7 +133,7 @@ public class Item
     public string Code { get; set; } = string.Empty;
     public byte NumberOfSocketedItems { get; set; }
     public byte TotalNumberOfSockets { get; set; }
-    public List<Item> SocketedItems { get; set; } = new List<Item>();
+    public List<Item> SocketedItems { get; set; } = new();
     public uint Id { get; set; }
     public byte ItemLevel { get; set; }
     public ItemQuality Quality { get; set; }
@@ -129,15 +157,15 @@ public class Item
     public ushort Quantity { get; set; }
     public byte SetItemMask { get; set; }
     public List<ItemStatList> StatLists { get; } = new List<ItemStatList>();
-    public bool IsIdentified { get => Flags[4]; set => Flags[4] = value; }
-    public bool IsSocketed { get => Flags[11]; set => Flags[11] = value; }
-    public bool IsNew { get => Flags[13]; set => Flags[13] = value; }
-    public bool IsEar { get => Flags[16]; set => Flags[16] = value; }
-    public bool IsStarterItem { get => Flags[17]; set => Flags[17] = value; }
-    public bool IsCompact { get => Flags[21]; set => Flags[21] = value; }
-    public bool IsEthereal { get => Flags[22]; set => Flags[22] = value; }
-    public bool IsPersonalized { get => Flags[24]; set => Flags[24] = value; }
-    public bool IsRuneword { get => Flags[26]; set => Flags[26] = value; }
+    public bool IsIdentified { get => _flags[4]; set => _flags[4] = value; }
+    public bool IsSocketed { get => _flags[11]; set => _flags[11] = value; }
+    public bool IsNew { get => _flags[13]; set => _flags[13] = value; }
+    public bool IsEar { get => _flags[16]; set => _flags[16] = value; }
+    public bool IsStarterItem { get => _flags[17]; set => _flags[17] = value; }
+    public bool IsCompact { get => _flags[21]; set => _flags[21] = value; }
+    public bool IsEthereal { get => _flags[22]; set => _flags[22] = value; }
+    public bool IsPersonalized { get => _flags[24]; set => _flags[24] = value; }
+    public bool IsRuneword { get => _flags[26]; set => _flags[26] = value; }
 
     public void Write(IBitWriter writer, uint version)
     {
@@ -190,7 +218,7 @@ public class Item
         return writer.ToArray();
     }
 
-    protected static string ReadPlayerName(IBitReader reader)
+    private static string ReadPlayerName(IBitReader reader)
     {
         char[] name = new char[15];
         for (int i = 0; i < name.Length; i++)
@@ -204,7 +232,7 @@ public class Item
         return new string(name);
     }
 
-    protected static void WritePlayerName(IBitWriter writer, string name)
+    private static void WritePlayerName(IBitWriter writer, string name)
     {
         byte[] bytes = Encoding.ASCII.GetBytes(name.Replace("\0", ""));
         for (int i = 0; i < bytes.Length; i++)
@@ -214,7 +242,7 @@ public class Item
         writer.WriteByte((byte)'\0', 7);
     }
 
-    protected static void ReadCompact(IBitReader reader, Item item, uint version)
+    private static void ReadCompact(IBitReader reader, Item item, uint version)
     {
         Span<byte> bytes = stackalloc byte[4];
         reader.ReadBytes(bytes);
@@ -256,20 +284,22 @@ public class Item
         }
     }
 
-    protected static void WriteCompact(IBitWriter writer, Item item, uint version)
+    private static void WriteCompact(IBitWriter writer, Item item, uint version)
     {
         if (item.Flags is not InternalBitArray flags)
         {
-            flags = new InternalBitArray(32);
-            flags[4] = item.IsIdentified;
-            flags[11] = item.IsSocketed;
-            flags[13] = item.IsNew;
-            flags[16] = item.IsEar;
-            flags[17] = item.IsStarterItem;
-            flags[21] = item.IsCompact;
-            flags[22] = item.IsEthereal;
-            flags[24] = item.IsPersonalized;
-            flags[26] = item.IsRuneword;
+            flags = new InternalBitArray(32)
+            {
+                [04] = item.IsIdentified,
+                [11] = item.IsSocketed,
+                [13] = item.IsNew,
+                [16] = item.IsEar,
+                [17] = item.IsStarterItem,
+                [21] = item.IsCompact,
+                [22] = item.IsEthereal,
+                [24] = item.IsPersonalized,
+                [26] = item.IsRuneword
+            };
         }
         writer.WriteBits(flags);
         if (version <= 0x60)
@@ -304,7 +334,7 @@ public class Item
                 var codeTree = Core.MetaData.ItemsData.ItemCodeTree;
                 for (int i = 0; i < 4; i++)
                 {
-                    var bits = codeTree.EncodeChar((char)code[i]);
+                    using var bits = codeTree.EncodeChar((char)code[i]);
                     foreach (bool bit in bits)
                     {
                         writer.WriteBit(bit);
@@ -313,10 +343,9 @@ public class Item
             }
             writer.WriteByte(item.NumberOfSocketedItems, item.IsCompact ? 1 : 3);
         }
-
     }
 
-    protected static void ReadComplete(IBitReader reader, Item item, uint version)
+    private static void ReadComplete(IBitReader reader, Item item, uint version)
     {
         item.Id = reader.ReadUInt32();
         item.ItemLevel = reader.ReadByte(7);
@@ -430,7 +459,7 @@ public class Item
         }
     }
 
-    protected static void WriteComplete(IBitWriter writer, Item item, uint version)
+    private static void WriteComplete(IBitWriter writer, Item item, uint version)
     {
         writer.WriteUInt32(item.Id);
         writer.WriteByte(item.ItemLevel, 7);
@@ -547,6 +576,16 @@ public class Item
             }
         }
     }
+
+    public void Dispose()
+    {
+        Interlocked.Exchange(ref _flags!, null)?.Dispose();
+        foreach (var item in SocketedItems)
+        {
+            item?.Dispose();
+        }
+        SocketedItems.Clear();
+    }
 }
 
 public class ItemStatList
@@ -558,7 +597,7 @@ public class ItemStatList
     private const ushort coldmindam = 54;
     private const ushort poisonmindam = 57;
 
-    public List<ItemStat> Stats { get; set; } = new List<ItemStat>();
+    public List<ItemStat> Stats { get; set; } = new();
 
     public static ItemStatList Read(IBitReader reader)
     {
@@ -741,5 +780,4 @@ public class ItemStat
             ? Core.MetaData.ItemStatCostData.GetById(statId)
             : Core.MetaData.ItemStatCostData.GetByStat(stat.Stat);
     }
-
 }

@@ -39,7 +39,7 @@ public sealed class NPCDialogSection
 
         Span<byte> bytes = stackalloc byte[0x30];
         reader.ReadBytes(bytes);
-        var bits = new InternalBitArray(bytes);
+        using var bits = new InternalBitArray(bytes);
 
         for (int i = 0; i < npcDialogSection._difficulties.Length; i++)
         {

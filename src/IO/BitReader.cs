@@ -141,5 +141,5 @@ public sealed class BitReader : IBitReader, IDisposable
 
     public void Align() => Position = (Position + 7) & ~7;
 
-    public void Dispose() => _bits = null!;
+    public void Dispose() => Interlocked.Exchange(ref _bits!, null)?.Dispose();
 }

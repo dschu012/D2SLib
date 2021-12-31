@@ -17,7 +17,7 @@ public sealed class ItemsData
     public MiscData MiscData { get; }
 
     private HuffmanTree? _itemCodeTree = null;
-    public HuffmanTree ItemCodeTree
+    internal HuffmanTree ItemCodeTree
     {
         get => _itemCodeTree ??= InitializeHuffmanTree();
         set => _itemCodeTree = value;

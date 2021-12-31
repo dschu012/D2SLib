@@ -76,13 +76,13 @@ public sealed class BitWriter : IBitWriter, IDisposable
 
     public void WriteBytes(ReadOnlySpan<byte> value)
     {
-        var bits = new InternalBitArray(value);
+        using var bits = new InternalBitArray(value);
         WriteBits(bits);
     }
 
     public void WriteBytes(ReadOnlySpan<byte> value, int numberOfBits)
     {
-        var bits = new InternalBitArray(value) { Length = numberOfBits };
+        using var bits = new InternalBitArray(value) { Length = numberOfBits };
         WriteBits(bits, numberOfBits);
     }
 
@@ -174,5 +174,5 @@ public sealed class BitWriter : IBitWriter, IDisposable
     public void SeekBits(int bitPosition) => Position = bitPosition;
     public void Seek(int bytePostion) => SeekBits(bytePostion * 8);
     public void Align() => Position = (Position + 7) & ~7;
-    public void Dispose() => _bits = null!;
+    public void Dispose() => Interlocked.Exchange(ref _bits!, null)?.Dispose();
 }

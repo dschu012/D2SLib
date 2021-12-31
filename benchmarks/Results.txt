@@ -9,9 +9,9 @@ Original:
 
 Revised:
 
-|   Method |        Job |       Runtime |       Mean |    Error |   StdDev |    Gen 0 |   Gen 1 | Allocated |
-|--------- |----------- |-------------- |-----------:|---------:|---------:|---------:|--------:|----------:|
-| LoadOnly | Job-TRPBVX |      .NET 6.0 |   708.2 us |  5.30 us |  4.95 us |  49.8047 | 10.7422 |    231 KB |
-| SaveOnly | Job-TRPBVX |      .NET 6.0 | 1,619.9 us | 21.20 us | 16.55 us | 312.5000 |  5.8594 |  1,438 KB |
-| LoadOnly | Job-SMJWQL | .NET Core 3.1 |   886.8 us |  6.18 us |  5.16 us |  49.8047 | 10.7422 |    231 KB |
-| SaveOnly | Job-SMJWQL | .NET Core 3.1 | 1,991.9 us | 39.51 us | 35.02 us | 312.5000 |  3.9063 |  1,438 KB |
+|   Method |        Job |       Runtime |       Mean |   Error |  StdDev |   Gen 0 |   Gen 1 | Allocated |
+|--------- |----------- |-------------- |-----------:|--------:|--------:|--------:|--------:|----------:|
+| LoadOnly | Job-MHBQCF |      .NET 6.0 |   735.6 us | 4.74 us | 4.20 us | 50.7813 | 11.7188 |    237 KB |
+| SaveOnly | Job-MHBQCF |      .NET 6.0 | 1,223.6 us | 7.57 us | 8.42 us | 44.9219 |       - |    215 KB |
+| LoadOnly | Job-OTQTAE | .NET Core 3.1 |   880.1 us | 3.63 us | 3.22 us | 50.7813 | 11.7188 |    237 KB |
+| SaveOnly | Job-OTQTAE | .NET Core 3.1 | 1,426.6 us | 8.43 us | 7.88 us | 44.9219 |       - |    215 KB |

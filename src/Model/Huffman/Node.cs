@@ -2,7 +2,7 @@
 
 namespace D2SLib.Model.Huffman;
 
-public class Node
+internal class Node
 {
     public char Symbol { get; set; }
     public int Frequency { get; set; }
@@ -17,7 +17,6 @@ public class Node
         }
         else
         {
-
             if (Left is not null)
             {
                 data.Add(false);

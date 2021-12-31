@@ -2,7 +2,7 @@
 
 namespace D2SLib.Model.Save;
 
-public class Mercenary
+public sealed class Mercenary
 {
     //is this right?
     public ushort IsDead { get; set; }
@@ -49,10 +49,10 @@ public class Mercenary
     }
 }
 
-public class MercenaryItemList
+public sealed class MercenaryItemList : IDisposable
 {
     public ushort? Header { get; set; }
-    public ItemList? ItemList { get; set; }
+    public ItemList? ItemList { get; private set; }
 
     public void Write(IBitWriter writer, Mercenary mercenary, uint version)
     {
@@ -83,4 +83,6 @@ public class MercenaryItemList
         mercenaryItemList.Write(writer, mercenary, version);
         return writer.ToArray();
     }
+
+    public void Dispose() => ItemList?.Dispose();
 }

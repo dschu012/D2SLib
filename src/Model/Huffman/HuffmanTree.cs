@@ -1,10 +1,9 @@
 ﻿using D2SLib.IO;
-using System.Collections;
 
 namespace D2SLib.Model.Huffman;
 
 //hardcoded....
-public class HuffmanTree
+internal class HuffmanTree
 {
     public Node? Root { get; set; }
 
@@ -79,7 +78,7 @@ public class HuffmanTree
         }
     }
 
-    public IEnumerable<bool> EncodeChar(char source)
+    public InternalBitArray EncodeChar(char source)
     {
         var encodedSymbol = Root?.Traverse(source, new InternalBitArray(0));
         if (encodedSymbol is null)

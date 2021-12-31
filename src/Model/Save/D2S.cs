@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace D2SLib.Model.Save;
 
-public class D2S
+public sealed class D2S : IDisposable
 {
     private D2S(IBitReader reader)
     {
@@ -187,5 +187,15 @@ public class D2S
         byte[] bytes = writer.ToArray();
         Header.Fix(bytes);
         return bytes;
+    }
+
+    public void Dispose()
+    {
+        Waypoints.Dispose();
+        Status.Dispose();
+        Quests.Dispose();
+        PlayerItemList.Dispose();
+        PlayerCorpses.Dispose();
+        MercenaryItemList?.Dispose();
     }
 }
