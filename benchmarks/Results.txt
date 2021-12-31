@@ -15,3 +15,7 @@ Revised:
 | SaveOnly | Job-MHBQCF |      .NET 6.0 | 1,223.6 us | 7.57 us | 8.42 us | 44.9219 |       - |    215 KB |
 | LoadOnly | Job-OTQTAE | .NET Core 3.1 |   880.1 us | 3.63 us | 3.22 us | 50.7813 | 11.7188 |    237 KB |
 | SaveOnly | Job-OTQTAE | .NET Core 3.1 | 1,426.6 us | 8.43 us | 7.88 us | 44.9219 |       - |    215 KB |
+
+
+Load: 229 times faster, 77% less memory used.
+Save: 249 times faster, 90% less memory used.
