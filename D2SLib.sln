@@ -7,9 +7,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "D2SLib", "src\D2SLib.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "D2SLibTests", "test\D2SLibTests.csproj", "{F2F223AD-BCE4-47B3-BAF8-DA2D533FD05F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D2SLib_Local.Benchmark", "benchmarks\D2SLib_Local.Benchmark\D2SLib_Local.Benchmark.csproj", "{3F72860B-D08C-45EE-9E1B-17888E103B62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "D2SLib_Local.Benchmark", "benchmarks\D2SLib_Local.Benchmark\D2SLib_Local.Benchmark.csproj", "{3F72860B-D08C-45EE-9E1B-17888E103B62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D2SLib_Nuget.Benchmark", "benchmarks\D2SLib_Nuget.Benchmark\D2SLib_Nuget.Benchmark.csproj", "{7D3FEEAB-7752-4753-9EC0-EF4E7F72EB74}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "D2SLib_Nuget.Benchmark", "benchmarks\D2SLib_Nuget.Benchmark\D2SLib_Nuget.Benchmark.csproj", "{7D3FEEAB-7752-4753-9EC0-EF4E7F72EB74}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FCAB7929-60A6-4DA7-9C96-0BE97B160694}"
+	ProjectSection(SolutionItems) = preProject
+		benchmarks\Results.txt = benchmarks\Results.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

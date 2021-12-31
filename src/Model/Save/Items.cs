@@ -301,10 +301,11 @@ public class Item
             }
             else if (version >= 0x61)
             {
+                var codeTree = Core.MetaData.ItemsData.ItemCodeTree;
                 for (int i = 0; i < 4; i++)
                 {
-                    var bits = Core.MetaData.ItemsData.ItemCodeTree.EncodeChar((char)code[i]);
-                    foreach (bool bit in bits.Cast<bool>())
+                    var bits = codeTree.EncodeChar((char)code[i]);
+                    foreach (bool bit in bits)
                     {
                         writer.WriteBit(bit);
                     }
@@ -391,13 +392,12 @@ public class Item
         bool isStackable = row?["stackable"].ToBool() ?? false;
         if (isArmor)
         {
-            //why do i need this cast?
-            item.Armor = (ushort)(reader.ReadUInt16(11) + itemStatCost["armorclass"]?["Save Add"].ToUInt16() ?? 0);
+            item.Armor = (ushort)(reader.ReadUInt16(11) + itemStatCost.GetByStat("armorclass")?["Save Add"].ToUInt16() ?? 0);
         }
         if (isArmor || isWeapon)
         {
-            var maxDurabilityStat = itemStatCost["maxdurability"];
-            var durabilityStat = itemStatCost["maxdurability"];
+            var maxDurabilityStat = itemStatCost.GetByStat("maxdurability");
+            var durabilityStat = itemStatCost.GetByStat("maxdurability");
             item.MaxDurability = (ushort)(reader.ReadUInt16(maxDurabilityStat?["Save Bits"].ToInt32() ?? 0) + maxDurabilityStat?["Save Add"].ToUInt16() ?? 0);
             if (item.MaxDurability > 0)
             {
@@ -510,12 +510,12 @@ public class Item
         bool isStackable = row?["stackable"].ToBool() ?? false;
         if (isArmor)
         {
-            writer.WriteUInt16((ushort)(item.Armor - itemStatCost["armorclass"]?["Save Add"].ToUInt16() ?? 0), 11);
+            writer.WriteUInt16((ushort)(item.Armor - itemStatCost.GetByStat("armorclass")?["Save Add"].ToUInt16() ?? 0), 11);
         }
         if (isArmor || isWeapon)
         {
-            var maxDurabilityStat = itemStatCost["maxdurability"];
-            var durabilityStat = itemStatCost["maxdurability"];
+            var maxDurabilityStat = itemStatCost.GetByStat("maxdurability");
+            var durabilityStat = itemStatCost.GetByStat("maxdurability");
             writer.WriteUInt16((ushort)(item.MaxDurability - maxDurabilityStat?["Save Add"].ToUInt16() ?? 0), maxDurabilityStat?["Save Bits"].ToInt32() ?? 0);
             if (item.MaxDurability > 0)
             {
@@ -623,7 +623,7 @@ public class ItemStat
     public static ItemStat Read(IBitReader reader, ushort id)
     {
         var itemStat = new ItemStat();
-        var property = Core.MetaData.ItemStatCostData[id];
+        var property = Core.MetaData.ItemStatCostData.GetById(id);
         if (property == null)
         {
             throw new Exception($"No ItemStatCost record found for id: {id} at bit {reader.Position - 9}");
@@ -737,14 +737,9 @@ public class ItemStat
 
     public static DataRow? GetStatRow(ItemStat stat)
     {
-        if (stat.Id != null)
-        {
-            return Core.MetaData.ItemStatCostData[(ushort)stat.Id];
-        }
-        else
-        {
-            return Core.MetaData.ItemStatCostData[stat.Stat];
-        }
+        return stat.Id is ushort statId
+            ? Core.MetaData.ItemStatCostData.GetById(statId)
+            : Core.MetaData.ItemStatCostData.GetByStat(stat.Stat);
     }
 
 }

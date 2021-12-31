@@ -18,7 +18,7 @@ public class Attributes
         ushort id = reader.ReadUInt16(9);
         while (id != 0x1ff)
         {
-            var property = itemStatCost[id];
+            var property = itemStatCost.GetById(id);
             int attribute = reader.ReadInt32(property?["CSvBits"].ToInt32() ?? 0);
             int valShift = property?["ValShift"].ToInt32() ?? 0;
             if (valShift > 0)
@@ -38,7 +38,7 @@ public class Attributes
         writer.WriteUInt16(Header ?? 0x6667);
         foreach (var entry in Stats)
         {
-            var property = itemStatCost[entry.Key];
+            var property = itemStatCost.GetByStat(entry.Key);
             writer.WriteUInt16(property?["ID"].ToUInt16() ?? 0, 9);
             int attribute = entry.Value;
             int valShift = property?["ValShift"].ToInt32() ?? 0;

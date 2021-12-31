@@ -56,7 +56,7 @@ public sealed class ItemsData
         }
         */
         var itemCodeTree = new HuffmanTree();
-        itemCodeTree.Build(new List<string>());
+        itemCodeTree.Build();
         return itemCodeTree;
     }
 }

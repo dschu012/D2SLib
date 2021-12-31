@@ -2,8 +2,8 @@
 
 public sealed class ItemStatCostData : DataFile
 {
-    public DataRow? this[int id] => GetByColumnAndValue("ID", id);
-    public DataRow? this[string stat] => GetByColumnAndValue("Stat", stat);
+    public DataRow? GetById(int id) => GetByColumnAndValue("ID", id);
+    public DataRow? GetByStat(string stat) => GetByColumnAndValue("Stat", stat);
 
     public static ItemStatCostData Read(Stream data)
     {

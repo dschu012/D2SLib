@@ -1,4 +1,6 @@
-﻿namespace D2SLib.Model.Huffman;
+﻿using D2SLib.IO;
+
+namespace D2SLib.Model.Huffman;
 
 public class Node
 {
@@ -7,45 +9,36 @@ public class Node
     public Node? Right { get; set; }
     public Node? Left { get; set; }
 
-    public List<bool>? Traverse(char symbol, List<bool> data)
+    internal InternalBitArray? Traverse(char symbol, InternalBitArray data)
     {
-        // Leaf
-        if (Right == null && Left == null)
+        if (IsLeaf())
         {
-            if (symbol.Equals(Symbol))
-            {
-                return data;
-            }
-            else
-            {
-                return null;
-            }
+            return symbol.Equals(Symbol) ? data : null;
         }
         else
         {
-            List<bool>? left = null;
-            List<bool>? right = null;
 
             if (Left is not null)
             {
-                var leftPath = new List<bool>(data) { false };
-                left = Left.Traverse(symbol, leftPath);
+                data.Add(false);
+                var left = Left.Traverse(symbol, data);
+                if (left is null)
+                    data.Length--;
+                else
+                    return data;
             }
 
             if (Right is not null)
             {
-                var rightPath = new List<bool>(data) { true };
-                right = Right.Traverse(symbol, rightPath);
+                data.Add(true);
+                var right = Right.Traverse(symbol, data);
+                if (right is null)
+                    data.Length--;
+                else
+                    return data;
             }
 
-            if (left != null)
-            {
-                return left;
-            }
-            else
-            {
-                return right;
-            }
+            return null;
         }
     }
 

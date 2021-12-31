@@ -1,18 +1,38 @@
 ﻿using Microsoft.Toolkit.HighPerformance;
 using Microsoft.Toolkit.HighPerformance.Buffers;
-using System.Collections;
 using System.Diagnostics;
 
 namespace D2SLib.Model.Data;
 
-public abstract class DataFile : IList<DataRow>
+public abstract class DataFile
 {
     private DataColumn[] _columns = Array.Empty<DataColumn>();
     private readonly Dictionary<string, int> _columnsLookup = new();
 
     public IReadOnlyDictionary<string, int> ColumnNames => _columnsLookup;
     public ReadOnlySpan<DataColumn> Columns => _columns;
-    public IList<DataRow> Rows => this;
+    public int Count => _columns.Length == 0 ? 0 : _columns[0].Count;
+
+    public DataRow this[int rowIndex]
+    {
+        get
+        {
+            if ((uint)rowIndex >= (uint)(_columns.Length == 0 ? 0 : _columns[0].Count))
+                throw new ArgumentOutOfRangeException(nameof(rowIndex));
+            return new DataRow(this, rowIndex);
+        }
+    }
+
+    public IEnumerable<DataRow> GetRows()
+    {
+        if (_columns.Length > 0)
+        {
+            for (int i = 0, len = _columns[0].Count; i < len; i++)
+            {
+                yield return new DataRow(this, i);
+            }
+        }
+    }
 
     protected void ReadData(Stream data)
     {
@@ -44,44 +64,6 @@ public abstract class DataFile : IList<DataRow>
                 _columns = new DataColumn[colIndex];
                 continue;
             }
-
-            //if (_columns.Length == 0)
-            //{
-            //    // infer column types, create columns
-                
-            //    foreach (var value in curLine.Tokenize('\t'))
-            //    {
-            //        if (ushort.TryParse(value, out var ushortVal))
-            //        {
-            //            var col = new UInt16DataColumn(colNames[colIndex]);
-            //            col.AddValue(ushortVal);
-            //            _columns[colIndex] = col;
-            //        }
-            //        else if (int.TryParse(value, out var intVal))
-            //        {
-            //            var col = new Int32DataColumn(colNames[colIndex]);
-            //            col.AddValue(intVal);
-            //            _columns[colIndex] = col;
-            //        }
-            //        else
-            //        {
-            //            var col = new StringDataColumn(colNames[colIndex]);
-            //            col.AddValue(StringPool.Shared.GetOrAdd(value));
-            //            _columns[colIndex] = col;
-            //        }
-
-            //        colIndex++;
-            //    }
-
-            //    while (colIndex < colNames.Count)
-            //    {
-            //        var col = new StringDataColumn(colNames[colIndex]);
-            //        col.AddEmptyValue();
-            //        _columns[colIndex++] = col;
-            //    }
-
-            //    continue;
-            //}
 
             // add data to existing columns
             foreach (var value in curLine.Tokenize('\t'))
@@ -230,47 +212,6 @@ public abstract class DataFile : IList<DataRow>
         }
         return null;
     }
-
-    #region IList<DataRow> implementation
-
-    int ICollection<DataRow>.Count => _columns.Length == 0 ? 0 : _columns[0].Count;
-
-    bool ICollection<DataRow>.IsReadOnly => true;
-
-    DataRow IList<DataRow>.this[int index]
-    {
-        get
-        {
-            if ((uint)index >= (uint)(_columns.Length == 0 ? 0 : _columns[0].Count))
-                throw new ArgumentOutOfRangeException(nameof(index));
-            return new DataRow(this, index);
-        }
-        set => throw new NotSupportedException();
-    }
-
-    private IEnumerable<DataRow> GetRows()
-    {
-        if (_columns.Length > 0)
-        {
-            for (int i = 0, len = _columns[0].Count; i < len; i++)
-            {
-                yield return new DataRow(this, i);
-            }
-        }
-    }
-
-    int IList<DataRow>.IndexOf(DataRow item) => throw new NotSupportedException();
-    void IList<DataRow>.Insert(int index, DataRow item) => throw new NotSupportedException();
-    void IList<DataRow>.RemoveAt(int index) => throw new NotSupportedException();
-    void ICollection<DataRow>.Add(DataRow item) => throw new NotSupportedException();
-    void ICollection<DataRow>.Clear() => throw new NotSupportedException();
-    bool ICollection<DataRow>.Contains(DataRow item) => throw new NotSupportedException();
-    void ICollection<DataRow>.CopyTo(DataRow[] array, int arrayIndex) => throw new NotImplementedException();
-    bool ICollection<DataRow>.Remove(DataRow item) => throw new NotImplementedException();
-    IEnumerator<DataRow> IEnumerable<DataRow>.GetEnumerator() => GetRows().GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetRows().GetEnumerator();
-
-    #endregion
 }
 
 [DebuggerDisplay("Row {RowIndex}")]

@@ -191,6 +191,12 @@ internal sealed class InternalBitArray : IList<bool>, ICloneable
         _version++;
     }
 
+    public void Add(bool value)
+    {
+        int idx = Length++;
+        Set(idx, value);
+    }
+
     /*=========================================================================
     ** Sets all the bit values to value.
     =========================================================================*/

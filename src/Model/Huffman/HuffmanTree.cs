@@ -50,13 +50,13 @@ public class HuffmanTree
     };
 
     //todo find a way to build this like d2?
-    public void Build(List<string> items)
+    public void Build()
     {
         Root = new Node();
         foreach (var entry in TABLE)
         {
             var current = Root;
-            foreach (char bit in entry.Value)
+            foreach (char bit in entry.Value.AsSpan())
             {
                 if (bit == '1')
                 {
@@ -79,12 +79,12 @@ public class HuffmanTree
         }
     }
 
-    public BitArray EncodeChar(char source)
+    public IEnumerable<bool> EncodeChar(char source)
     {
-        var encodedSymbol = Root?.Traverse(source, new List<bool>());
+        var encodedSymbol = Root?.Traverse(source, new InternalBitArray(0));
         if (encodedSymbol is null)
             throw new InvalidOperationException("Could not encode with an empty tree.");
-        return new BitArray(encodedSymbol.ToArray());
+        return encodedSymbol;
     }
 
     public char DecodeChar(IBitReader reader)
