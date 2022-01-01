@@ -236,7 +236,8 @@ public sealed class Item : IDisposable
     {
         var nameChars = name.AsSpan().TrimEnd('\0');
         Span<byte> bytes = stackalloc byte[nameChars.Length];
-        Encoding.ASCII.GetBytes(nameChars, bytes);
+        int byteCount = Encoding.ASCII.GetBytes(nameChars, bytes);
+        bytes = bytes[..byteCount];
         for (int i = 0; i < bytes.Length; i++)
         {
             writer.WriteByte(bytes[i], 7);
