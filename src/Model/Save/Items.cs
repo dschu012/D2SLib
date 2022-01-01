@@ -220,7 +220,7 @@ public sealed class Item : IDisposable
 
     private static string ReadPlayerName(IBitReader reader)
     {
-        char[] name = new char[15];
+        Span<char> name = stackalloc char[15];
         for (int i = 0; i < name.Length; i++)
         {
             name[i] = (char)reader.ReadByte(7);
@@ -234,7 +234,9 @@ public sealed class Item : IDisposable
 
     private static void WritePlayerName(IBitWriter writer, string name)
     {
-        byte[] bytes = Encoding.ASCII.GetBytes(name.Replace("\0", ""));
+        var nameChars = name.AsSpan().TrimEnd('\0');
+        Span<byte> bytes = stackalloc byte[nameChars.Length];
+        Encoding.ASCII.GetBytes(nameChars, bytes);
         for (int i = 0; i < bytes.Length; i++)
         {
             writer.WriteByte(bytes[i], 7);
