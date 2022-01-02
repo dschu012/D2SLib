@@ -327,7 +327,9 @@ public sealed class Item : IDisposable
         }
         else
         {
-            byte[]? code = Encoding.ASCII.GetBytes(item.Code.PadRight(4, ' '));
+            var itemCode = item.Code.PadRight(4, ' ');
+            Span<byte> code = stackalloc byte[itemCode.Length];
+            Encoding.ASCII.GetBytes(itemCode, code);
             if (version <= 0x60)
             {
                 writer.WriteBytes(code);
