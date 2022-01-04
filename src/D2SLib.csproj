@@ -12,7 +12,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/dschu012/D2SLib</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Version>1.0.2</Version>
+    <Version>2.0.0</Version>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
