@@ -1,89 +1,114 @@
 ﻿using D2SLib.IO;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+public class ClassSkills
 {
-    public class ClassSkills
+    private const int SKILL_COUNT = 30;
+
+    private static readonly uint[] SKILL_OFFSETS = { 6, 36, 66, 96, 126, 221, 251 };
+    public ushort? Header { get; set; }
+    public List<ClassSkill> Skills { get; } = new List<ClassSkill>(SKILL_COUNT);
+
+    public ClassSkill this[int i] => Skills[i];
+
+    public void Write(IBitWriter writer)
     {
-        private static readonly UInt32[] SKILL_OFFSETS = { 6, 36, 66, 96, 126, 221, 251 };
-        public UInt16? Header { get; set; }
-        public List<ClassSkill> Skills { get; set; } = new List<ClassSkill>();
-
-        public ClassSkill this[int i] => this.Skills[i];
-
-        public static ClassSkills Read(byte[] bytes, int playerClass)
+        writer.WriteUInt16(Header ?? 0x6669);
+        for (int i = 0; i < SKILL_COUNT; i++)
         {
-            ClassSkills classSkills = new ClassSkills();
-            using(BitReader reader = new BitReader(bytes))
-            {
-                classSkills.Header = reader.ReadUInt16();
-                uint offset = SKILL_OFFSETS[playerClass];
-                for (uint i = 0; i < 30; i++)
-                {
-                    ClassSkill skill = ClassSkill.Read(reader.ReadByte());
-                    skill.Id = offset + i;
-                    classSkills.Skills.Add(skill);
-                }
-                return classSkills;
-            }
-        }
-
-        public static byte[] Write(ClassSkills classSkills)
-        {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt16(classSkills.Header ?? (UInt16)0x6669);
-                for (int i = 0; i < 30; i++)
-                {
-                    writer.WriteBytes(ClassSkill.Write(classSkills.Skills[i]));
-                }
-                return writer.ToArray();
-            }
+            Skills[i].Write(writer);
         }
     }
 
-    public class ClassSkill
+    public static ClassSkills Read(IBitReader reader, int playerClass)
     {
-        public UInt32 Id { get; set; }
-        public byte Points { get; set; }
-
-        public static ClassSkill Read(byte b)
+        var classSkills = new ClassSkills
         {
-            ClassSkill classSkill = new ClassSkill();
-            classSkill.Points = b;
-            return classSkill;
-        }
-
-        public static byte[] Write(ClassSkill classSkill)
+            Header = reader.ReadUInt16()
+        };
+        uint offset = SKILL_OFFSETS[playerClass];
+        for (uint i = 0; i < SKILL_COUNT; i++)
         {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteByte(classSkill.Points);
-                return writer.ToArray();
-            }
+            var skill = ClassSkill.Read(offset + i, reader.ReadByte());
+            classSkills.Skills.Add(skill);
         }
+        return classSkills;
     }
 
-    //header skill
-    public class Skill
+    [Obsolete("Try the direct-read overload!")]
+    public static ClassSkills Read(ReadOnlySpan<byte> bytes, int playerClass)
     {
-        public UInt32 Id { get; set; }
-        public static Skill Read(byte[] bytes)
-        {
-            Skill skill = new Skill();
-            skill.Id = BitConverter.ToUInt32(bytes);
-            return skill;
-        }
+        using var reader = new BitReader(bytes);
+        return Read(reader, playerClass);
+    }
 
-        public static byte[] Write(Skill skill)
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(ClassSkills classSkills)
+    {
+        using var writer = new BitWriter();
+        classSkills.Write(writer);
+        return writer.ToArray();
+    }
+}
+
+public class ClassSkill
+{
+    public uint Id { get; set; }
+    public byte Points { get; set; }
+
+    public void Write(IBitWriter writer) => writer.WriteByte(Points);
+
+    public static ClassSkill Read(uint id, byte points)
+    {
+        var classSkill = new ClassSkill
         {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt32(skill.Id);
-                return writer.ToArray();
-            }
-        }
+            Id = id,
+            Points = points
+        };
+        return classSkill;
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(ClassSkill classSkill)
+    {
+        using var writer = new BitWriter();
+        classSkill.Write(writer);
+        return writer.ToArray();
+    }
+}
+
+//header skill
+public class Skill
+{
+    public uint Id { get; set; }
+
+    public void Write(IBitWriter writer) => writer.WriteUInt32(Id);
+
+    public static Skill Read(IBitReader reader)
+    {
+        var skill = new Skill
+        {
+            Id = reader.ReadUInt32()
+        };
+        return skill;
+    }
+
+    [Obsolete("Try the direct-read overload!")]
+    public static Skill Read(ReadOnlySpan<byte> bytes)
+    {
+        var skill = new Skill
+        {
+            Id = BitConverter.ToUInt32(bytes)
+        };
+        return skill;
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(Skill skill)
+    {
+        using var writer = new BitWriter();
+        skill.Write(writer);
+        return writer.ToArray();
     }
 }

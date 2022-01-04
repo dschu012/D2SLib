@@ -1,71 +1,98 @@
 ﻿using D2SLib.IO;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+public sealed class CorpseList : IDisposable
 {
-    public class CorpseList
+    public CorpseList(ushort? header, ushort count)
     {
-        public UInt16? Header { get; set; }
-        public UInt16 Count { get; set; }
+        Header = header;
+        Count = count;
+        Corpses = new List<Corpse>(count);
+    }
 
-        public List<Corpse> Corpses { get; set; } = new List<Corpse>();
+    public ushort? Header { get; set; }
+    public ushort Count { get; set; }
+    public List<Corpse> Corpses { get; }
 
-        public static CorpseList Read(BitReader reader, UInt32 version)
+    public void Write(IBitWriter writer, uint version)
+    {
+        writer.WriteUInt16(Header ?? 0x4D4A);
+        writer.WriteUInt16(Count);
+        for (int i = 0; i < Count; i++)
         {
-            CorpseList corpseList = new CorpseList();
-            corpseList.Header = reader.ReadUInt16();
-            corpseList.Count = reader.ReadUInt16();
-            for (int i = 0; i < corpseList.Count; i++)
-            {
-                corpseList.Corpses.Add(Corpse.Read(reader, version));
-            }
-            return corpseList;
-        }
-
-        public static byte[] Write(CorpseList corpseList, UInt32 version)
-        {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt16(corpseList.Header ?? 0x4D4A);
-                writer.WriteUInt16(corpseList.Count);
-                for (int i = 0; i < corpseList.Count; i++)
-                {
-                    writer.WriteBytes(Corpse.Write(corpseList.Corpses[i], version));
-                }
-                return writer.ToArray();
-            }
+            Corpses[i].Write(writer, version);
         }
     }
 
-    public class Corpse
+    public static CorpseList Read(IBitReader reader, uint version)
     {
-        public UInt32? Unk0x0 { get; set; }
-        public UInt32 X { get; set; }
-        public UInt32 Y { get; set; }
-        public ItemList ItemList { get; set; }
-        public static Corpse Read(BitReader reader, UInt32 version)
+        var corpseList = new CorpseList(
+            header: reader.ReadUInt16(),
+            count: reader.ReadUInt16()
+        );
+        for (int i = 0; i < corpseList.Count; i++)
         {
-            Corpse corpse = new Corpse();
-            corpse.Unk0x0 = reader.ReadUInt32();
-            corpse.X = reader.ReadUInt32();
-            corpse.Y = reader.ReadUInt32();
-            corpse.ItemList = ItemList.Read(reader, version);
-            return corpse;
+            corpseList.Corpses.Add(Corpse.Read(reader, version));
         }
-
-        public static byte[] Write(Corpse corpse, UInt32 version)
-        {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteUInt32(corpse.Unk0x0 ?? (UInt32)0x0);
-                writer.WriteUInt32(corpse.X);
-                writer.WriteUInt32(corpse.Y);
-                writer.WriteBytes(ItemList.Write(corpse.ItemList, version));
-                return writer.ToArray();
-            }
-        }
+        return corpseList;
     }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(CorpseList corpseList, uint version)
+    {
+        using var writer = new BitWriter();
+        corpseList.Write(writer, version);
+        return writer.ToArray();
+    }
+
+    public void Dispose()
+    {
+        foreach (var corpse in Corpses)
+        {
+            corpse?.Dispose();
+        }
+        Corpses.Clear();
+    }
+}
+
+public sealed class Corpse : IDisposable
+{
+    private Corpse(IBitReader reader, uint version)
+    {
+        Unk0x0 = reader.ReadUInt32();
+        X = reader.ReadUInt32();
+        Y = reader.ReadUInt32();
+        ItemList = ItemList.Read(reader, version);
+    }
+
+    public uint? Unk0x0 { get; set; }
+    public uint X { get; set; }
+    public uint Y { get; set; }
+    public ItemList ItemList { get; }
+
+    public void Write(IBitWriter writer, uint version)
+    {
+        writer.WriteUInt32(Unk0x0 ?? 0x0);
+        writer.WriteUInt32(X);
+        writer.WriteUInt32(Y);
+        ItemList.Write(writer, version);
+    }
+
+    public static Corpse Read(IBitReader reader, uint version)
+    {
+        var corpse = new Corpse(reader, version);
+        return corpse;
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(Corpse corpse, uint version)
+    {
+        using var writer = new BitWriter();
+        corpse.Write(writer, version);
+        return writer.ToArray();
+    }
+
+    public void Dispose() => ItemList.Dispose();
 }
 

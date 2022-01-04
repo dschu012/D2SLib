@@ -1,60 +1,62 @@
 ﻿using D2SLib.IO;
-using D2SLib.Model.TXT;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+//variable size. depends on # of attributes
+public class Attributes
 {
-    //variable size. depends on # of attributes
-    public class Attributes
+    public ushort? Header { get; set; }
+    public Dictionary<string, int> Stats { get; } = new Dictionary<string, int>();
+
+    public static Attributes Read(IBitReader reader)
     {
-        public UInt16? Header { get; set; }
-        public Dictionary<string, Int32> Stats { get; set; } = new Dictionary<string, Int32>();
-
-        public static Attributes Read(BitReader reader)
+        var itemStatCost = Core.MetaData.ItemStatCostData;
+        var attributes = new Attributes
         {
-            ItemStatCostTXT itemStatCost = Core.TXT.ItemStatCostTXT;
-            Attributes attributes = new Attributes();
-            attributes.Header = reader.ReadUInt16();
-            UInt16 id = reader.ReadUInt16(9);
-            while(id != 0x1ff)
-            {
-                var property = itemStatCost[id];
-                var attribute = reader.ReadInt32(property["CSvBits"].ToInt32());
-                if(property["ValShift"].ToInt32() > 0)
-                {
-                    attribute >>= property["ValShift"].ToInt32();
-                }
-                attributes.Stats.Add(property["Stat"].Value, attribute);
-                id = reader.ReadUInt16(9);
-            }
-            reader.Align();
-            return attributes;
-        }
-
-        public static byte[] Write(Attributes attributes)
+            Header = reader.ReadUInt16()
+        };
+        ushort id = reader.ReadUInt16(9);
+        while (id != 0x1ff)
         {
-            using (BitWriter writer = new BitWriter())
+            var property = itemStatCost.GetById(id);
+            int attribute = reader.ReadInt32(property?["CSvBits"].ToInt32() ?? 0);
+            int valShift = property?["ValShift"].ToInt32() ?? 0;
+            if (valShift > 0)
             {
-                ItemStatCostTXT itemStatCost = Core.TXT.ItemStatCostTXT;
-                writer.WriteUInt16(attributes.Header ?? (UInt16)0x6667);
-                foreach (var entry in attributes.Stats)
-                {
-                    var property = itemStatCost[entry.Key];
-                    writer.WriteUInt16(property["ID"].ToUInt16(), 9);
-                    Int32 attribute = entry.Value;
-                    if(property["ValShift"].ToInt32() > 0)
-                    {
-                        attribute <<= property["ValShift"].ToInt32();
-                    }
-                    writer.WriteInt32(attribute, property["CSvBits"].ToInt32());
-                }
-                writer.WriteUInt16(0x1ff, 9);
-                writer.Align();
-                return writer.ToArray();
+                attribute >>= valShift;
             }
+            attributes.Stats.Add(property?["Stat"].Value ?? string.Empty, attribute);
+            id = reader.ReadUInt16(9);
         }
+        reader.Align();
+        return attributes;
+    }
 
+    public void Write(IBitWriter writer)
+    {
+        var itemStatCost = Core.MetaData.ItemStatCostData;
+        writer.WriteUInt16(Header ?? 0x6667);
+        foreach (var entry in Stats)
+        {
+            var property = itemStatCost.GetByStat(entry.Key);
+            writer.WriteUInt16(property?["ID"].ToUInt16() ?? 0, 9);
+            int attribute = entry.Value;
+            int valShift = property?["ValShift"].ToInt32() ?? 0;
+            if (valShift > 0)
+            {
+                attribute <<= valShift;
+            }
+            writer.WriteInt32(attribute, property?["CSvBits"].ToInt32() ?? 0);
+        }
+        writer.WriteUInt16(0x1ff, 9);
+        writer.Align();
+    }
+
+    [Obsolete("Try the non-allocating overload!")]
+    public static byte[] Write(Attributes attributes)
+    {
+        using var writer = new BitWriter();
+        attributes.Write(writer);
+        return writer.ToArray();
     }
 }

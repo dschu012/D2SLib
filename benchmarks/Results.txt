@@ -1,0 +1,21 @@
+Original:
+
+|   Method |       Runtime |     Mean |   Error |   StdDev |   Median |    Gen 0 | Allocated |
+|--------- |-------------- |---------:|--------:|---------:|---------:|---------:|----------:|
+| LoadOnly |      .NET 6.0 | 168.7 ms | 3.35 ms |  7.36 ms | 169.5 ms |        - |      1 MB |
+| SaveOnly |      .NET 6.0 | 304.1 ms | 8.64 ms | 25.49 ms | 316.7 ms | 500.0000 |      2 MB |
+| LoadOnly | .NET Core 3.1 | 169.7 ms | 3.37 ms |  7.68 ms | 170.3 ms |        - |      1 MB |
+| SaveOnly | .NET Core 3.1 | 304.2 ms | 8.02 ms | 23.15 ms | 316.4 ms | 500.0000 |      2 MB |
+
+Revised:
+
+|   Method |       Runtime |       Mean |   Error |  StdDev |   Gen 0 |   Gen 1 | Allocated |
+|--------- |-------------- |-----------:|--------:|--------:|--------:|--------:|----------:|
+| LoadOnly |      .NET 6.0 |   735.6 us | 4.74 us | 4.20 us | 50.7813 | 11.7188 |    237 KB |
+| SaveOnly |      .NET 6.0 | 1,223.6 us | 7.57 us | 8.42 us | 44.9219 |       - |    215 KB |
+| LoadOnly | .NET Core 3.1 |   880.1 us | 3.63 us | 3.22 us | 50.7813 | 11.7188 |    237 KB |
+| SaveOnly | .NET Core 3.1 | 1,426.6 us | 8.43 us | 7.88 us | 44.9219 |       - |    215 KB |
+
+
+Load: 229 times faster, 77% less memory used.
+Save: 249 times faster, 90% less memory used.

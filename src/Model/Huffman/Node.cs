@@ -1,66 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using D2SLib.IO;
 
-namespace D2SLib.Model.Huffman
+namespace D2SLib.Model.Huffman;
+
+internal class Node
 {
-    public class Node
+    public char Symbol { get; set; }
+    public int Frequency { get; set; }
+    public Node? Right { get; set; }
+    public Node? Left { get; set; }
+
+    internal InternalBitArray? Traverse(char symbol, InternalBitArray data)
     {
-        public char Symbol { get; set; }
-        public int Frequency { get; set; }
-        public Node Right { get; set; }
-        public Node Left { get; set; }
-
-        public List<bool> Traverse(char symbol, List<bool> data)
+        if (IsLeaf())
         {
-            // Leaf
-            if (Right == null && Left == null)
-            {
-                if (symbol.Equals(this.Symbol))
-                {
-                    return data;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            else
-            {
-                List<bool> left = null;
-                List<bool> right = null;
-
-                if (Left != null)
-                {
-                    List<bool> leftPath = new List<bool>();
-                    leftPath.AddRange(data);
-                    leftPath.Add(false);
-
-                    left = Left.Traverse(symbol, leftPath);
-                }
-
-                if (Right != null)
-                {
-                    List<bool> rightPath = new List<bool>();
-                    rightPath.AddRange(data);
-                    rightPath.Add(true);
-                    right = Right.Traverse(symbol, rightPath);
-                }
-
-                if (left != null)
-                {
-                    return left;
-                }
-                else
-                {
-                    return right;
-                }
-            }
+            return symbol.Equals(Symbol) ? data : null;
         }
-
-        public bool IsLeaf()
+        else
         {
-            return (Left == null && Right == null);
+            if (Left is not null)
+            {
+                data.Add(false);
+                var left = Left.Traverse(symbol, data);
+                if (left is null)
+                    data.Length--;
+                else
+                    return data;
+            }
+
+            if (Right is not null)
+            {
+                data.Add(true);
+                var right = Right.Traverse(symbol, data);
+                if (right is null)
+                    data.Length--;
+                else
+                    return data;
+            }
+
+            return null;
         }
     }
+
+    public bool IsLeaf() => Left is null && Right is null;
 }

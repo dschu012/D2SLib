@@ -1,33 +1,35 @@
 ﻿using D2SLib.IO;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace D2SLib.Model.Save
+namespace D2SLib.Model.Save;
+
+public sealed class D2I : IDisposable
 {
-    public class D2I
+    private D2I(IBitReader reader, uint version)
     {
-
-        public ItemList ItemList { get; set; }
-
-        public static D2I Read(byte[] bytes, UInt32 version)
-        {
-            D2I d2i = new D2I();
-            using (BitReader reader = new BitReader(bytes))
-            {
-                d2i.ItemList = ItemList.Read(reader, version);
-                return d2i;
-            }
-        }
-
-        public static byte[] Write(D2I d2i, UInt32 version)
-        {
-            using (BitWriter writer = new BitWriter())
-            {
-                writer.WriteBytes(ItemList.Write(d2i.ItemList, version));
-                return writer.ToArray();
-            }
-        }
-
+        ItemList = ItemList.Read(reader, version);
     }
+
+    public ItemList ItemList { get; }
+
+    public void Write(IBitWriter writer, uint version)
+    {
+        ItemList.Write(writer, version);
+    }
+
+    public static D2I Read(IBitReader reader, uint version) => new(reader, version);
+
+    public static D2I Read(ReadOnlySpan<byte> bytes, uint version)
+    {
+        using var reader = new BitReader(bytes);
+        return new D2I(reader, version);
+    }
+
+    public static byte[] Write(D2I d2i, uint version)
+    {
+        using var writer = new BitWriter();
+        d2i.Write(writer, version);
+        return writer.ToArray();
+    }
+
+    public void Dispose() => ItemList?.Dispose();
 }
